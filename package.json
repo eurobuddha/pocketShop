@@ -1,9 +1,40 @@
 {
   "name": "minifshop",
   "version": "1.0.0",
-  "description": "miniFShop Studio — local builder for Minima shop MiniDapps",
+  "description": "Lightweight MiniDapp shop template for selling products on the Minima blockchain. Includes a shop, vendor inbox, and Studio web UI builder.",
+  "main": "studio.js",
+  "bin": {
+    "minifshop": "studio.js"
+  },
   "scripts": {
-    "studio": "node studio.js"
+    "studio": "node studio.js",
+    "build": "node build-miniFShop.js"
+  },
+  "keywords": [
+    "minima",
+    "minidapp",
+    "blockchain",
+    "shop",
+    "mds",
+    "web3"
+  ],
+  "author": "eurobuddha",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/eurobuddha/miniFShop.git"
+  },
+  "homepage": "https://github.com/eurobuddha/miniFShop",
+  "files": [
+    "studio.js",
+    "studio-builder.js",
+    "build-miniFShop.js",
+    "web/",
+    "mInbox/",
+    "miniFShop-shop/"
+  ],
+  "engines": {
+    "node": ">=16"
   },
   "dependencies": {
     "archiver": "^7.0.1"
