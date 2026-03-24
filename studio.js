@@ -202,11 +202,6 @@ async function handleBuild(req, res) {
             currency:    currency || 'MINI',
         }, DIST_DIR);
 
-        // Clean up temp image
-        if (imagePath && imagePath.startsWith(TMP_IMG) && fs.existsSync(imagePath)) {
-            try { fs.unlinkSync(imagePath); } catch (_) {}
-        }
-
         jsonResponse(res, 200, {
             ok:        true,
             shop:      result.shopFile,
