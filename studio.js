@@ -11,13 +11,22 @@ const os     = require('os');
 const crypto = require('crypto');
 const { exec } = require('child_process');
 
-const PORT    = 3456;
-const WEB_DIR = path.join(__dirname, 'web');
-const DIST_DIR = path.join(__dirname, 'dist');
+const PORT = 3456;
+
+// When running as a pkg binary, __dirname points into the read-only virtual
+// snapshot filesystem. Output files (dist/, tmp images) must go to the real
+// filesystem. Assets (web/, templates) are read from the snapshot — that's fine.
+const IS_PKG   = !!process.pkg;
+const WEB_DIR  = path.join(__dirname, 'web');
+const DOCS_DIR = path.join(os.homedir(), 'Documents', 'miniFShop');
+const DIST_DIR = IS_PKG ? path.join(DOCS_DIR, 'dist') : path.join(__dirname, 'dist');
 const TMP_IMG  = path.join(os.tmpdir(), 'minifshop-images');
 
 const CONFIG_DIR  = path.join(os.homedir(), '.minifshop');
 const CONFIG_PATH = path.join(CONFIG_DIR, 'config.json');
+
+// Require builder at top level so pkg bundles it correctly
+const studioBuilder = require('./studio-builder');
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -181,8 +190,7 @@ async function handleBuild(req, res) {
 
         ensureDir(DIST_DIR);
 
-        const builder = require('./studio-builder');
-        const result  = await builder.build({
+        const result  = await studioBuilder.build({
             name,
             description: description || '',
             price:       parseFloat(price),
@@ -292,4 +300,14 @@ function start() {
     process.on('SIGTERM', shutdown);
 }
 
-start();
+module.exports = { start };
+
+if (require.main === module || process.pkg) {
+    try {
+        start();
+    } catch (e) {
+        console.error('STARTUP ERROR:', e.message);
+        console.error(e.stack);
+        process.exitCode = 1;
+    }
+}
