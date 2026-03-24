@@ -1,13 +1,15 @@
 'use strict';
 // miniFShop Studio — frontend logic
 
-let imagePath = ''; // server-side path of uploaded image
+let imagePath        = ''; // server-side path of uploaded image
+let selectedCurrency = 'MINI';
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
     initTabs();
     loadConfigStatus();
     wireImageDrop();
+    wireCurrencyPicker();
     document.getElementById('build-btn').addEventListener('click', buildShop);
     document.getElementById('setup-form').addEventListener('submit', saveSetup);
 });
@@ -71,6 +73,17 @@ async function saveSetup(e) {
         statusEl.textContent = '✗ ' + err.message;
         statusEl.className   = 'setup-status error';
     }
+}
+
+// ── Currency picker ───────────────────────────────────────────────────────────
+function wireCurrencyPicker() {
+    document.querySelectorAll('.currency-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.currency-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            selectedCurrency = btn.dataset.currency;
+        });
+    });
 }
 
 // ── Image drop zone ───────────────────────────────────────────────────────────
@@ -269,7 +282,7 @@ async function buildShop() {
         const res  = await fetch('/api/build', {
             method:  'POST',
             headers: { 'Content-Type': 'application/json' },
-            body:    JSON.stringify({ name, description: desc, price, maxUnits, imagePath }),
+            body:    JSON.stringify({ name, description: desc, price, maxUnits, imagePath, currency: selectedCurrency }),
         });
         const data = await res.json();
 

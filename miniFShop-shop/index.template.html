@@ -19,13 +19,16 @@
                 <img src="{{PRODUCT_IMAGE}}" alt="{{PRODUCT_NAME}}" class="product-image">
                 <h2>{{PRODUCT_NAME}}</h2>
                 <p class="description">{{PRODUCT_DESCRIPTION}}</p>
-                <p class="price">{{PRODUCT_PRICE}} Minima each</p>
+                <div class="price-line">
+                    <img src="{{CURRENCY_ICON}}" alt="{{CURRENCY_LABEL}}" class="currency-icon">
+                    <span class="price">{{PRODUCT_PRICE}} {{CURRENCY_LABEL}} each</span>
+                </div>
                 <div class="quantity-selector">
                     <button class="qty-btn" id="qty-minus">−</button>
                     <input type="number" id="quantity" value="1" min="1" max="{{MAX_UNITS}}" readonly>
                     <button class="qty-btn" id="qty-plus">+</button>
                 </div>
-                <p class="total-price">Total: <span id="total-display">{{PRODUCT_PRICE}}</span> Minima</p>
+                <p class="total-price">Total: <span id="total-display">{{PRODUCT_PRICE}}</span> {{CURRENCY_LABEL}}</p>
                 <button id="buy-btn" class="buy-btn">Buy Now</button>
             </div>
         </main>
@@ -56,11 +59,11 @@
             </div>
             
             <div class="summary">
-                <p><span id="order-qty">1</span> x {{PRODUCT_PRICE}} = <strong><span id="order-total">{{PRODUCT_PRICE}}</span> Minima</strong></p>
+                <p><span id="order-qty">1</span> x {{PRODUCT_PRICE}} = <strong><span id="order-total">{{PRODUCT_PRICE}}</span> {{CURRENCY_LABEL}}</strong></p>
                 <p class="hint">Payment TX ID will serve as your order confirmation</p>
             </div>
             
-            <button id="pay-btn" class="pay-btn">Pay <span id="pay-amount">{{PRODUCT_PRICE}}</span> Minima</button>
+            <button id="pay-btn" class="pay-btn">Pay <span id="pay-amount">{{PRODUCT_PRICE}}</span> {{CURRENCY_LABEL}}</button>
             
             <div id="status" class="status hidden"></div>
         </div>
@@ -229,7 +232,7 @@
                 amount: quantity.toString(),
                 unitPrice: UNIT_PRICE.toString(),
                 totalPrice: totalPrice,
-                currency: "MINI",
+                currency: "{{CURRENCY_LABEL}}",
                 email: email,
                 shipping: address,
                 message: message,
@@ -253,7 +256,7 @@
 
                 const state = {};
                 state[99] = encryptResult.encrypted;
-                const cmd = "send address:" + VENDOR_CONFIG.vendorAddress + " amount:" + totalPrice + " tokenid:0x00 state:" + JSON.stringify(state);
+                const cmd = "send address:" + VENDOR_CONFIG.vendorAddress + " amount:" + totalPrice + " tokenid:{{TOKEN_ID}} state:" + JSON.stringify(state);
                 
                 MDS.cmd(cmd, function(res) {
                     console.log('Transaction response:', JSON.stringify(res));

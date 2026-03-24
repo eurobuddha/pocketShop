@@ -12,6 +12,16 @@ const SHOP_TEMPLATE_DIR  = path.join(__dirname, 'miniFShop-shop');
 const INBOX_TEMPLATE_DIR = path.join(__dirname, 'mInbox');
 const DEFAULT_IMAGE      = path.join(SHOP_TEMPLATE_DIR, 'product.svg');
 
+const USDT_TOKEN_ID = '0x7D39745FBD29049BE29850B55A18BF550E4D442F930F86266E34193D89042A90';
+const MINI_TOKEN_ID = '0x00';
+
+function getCurrencyConfig(currency) {
+    if (currency === 'USDT') {
+        return { label: 'USDT', tokenId: USDT_TOKEN_ID, icon: 'usdt_icon.svg' };
+    }
+    return { label: 'MINI', tokenId: MINI_TOKEN_ID, icon: 'minima_logo_bw.svg' };
+}
+
 function ensureDir(d) { if (!fs.existsSync(d)) fs.mkdirSync(d, { recursive: true }); }
 function copyFile(s, d) { if (fs.existsSync(s)) fs.copyFileSync(s, d); }
 
@@ -56,27 +66,32 @@ const VENDOR_CONFIG = {
 `;
 }
 
-function generateShopDappConf(name, description) {
+function generateShopDappConf(name, description, currency) {
+    const currLabel = currency === 'USDT' ? 'USDT' : 'Minima';
     return JSON.stringify({
         name:        name.replace(/[^a-zA-Z0-9 \-]/g, '').trim() || 'miniFShop',
         icon:        'icon.svg',
         version:     '1.0.0',
-        description: description || `Buy ${name} with Minima`,
+        description: description || `Buy ${name} with ${currLabel}`,
         category:    'Commerce',
     }, null, '\t');
 }
 
-function generateShopHtml(template, { name, description, price, maxUnits, imageFile }) {
+function generateShopHtml(template, { name, description, price, maxUnits, imageFile, currencyLabel, tokenId, currencyIcon }) {
     return template
         .replace(/\{\{PRODUCT_NAME\}\}/g, name)
         .replace(/\{\{PRODUCT_DESCRIPTION\}\}/g, description)
         .replace(/\{\{PRODUCT_PRICE\}\}/g, price)
         .replace(/\{\{MAX_UNITS\}\}/g, maxUnits)
-        .replace(/\{\{PRODUCT_IMAGE\}\}/g, imageFile);
+        .replace(/\{\{PRODUCT_IMAGE\}\}/g, imageFile)
+        .replace(/\{\{CURRENCY_LABEL\}\}/g, currencyLabel)
+        .replace(/\{\{TOKEN_ID\}\}/g, tokenId)
+        .replace(/\{\{CURRENCY_ICON\}\}/g, currencyIcon);
 }
 
-async function build({ name, description, price, maxUnits, imagePath, address, pubkey }, distDir) {
+async function build({ name, description, price, maxUnits, imagePath, address, pubkey, currency }, distDir) {
     ensureDir(distDir);
+    const currConfig = getCurrencyConfig(currency);
 
     // ── Shop ─────────────────────────────────────────────────────────────────
     const shopTmp = path.join(distDir, `_tmp_shop_${Date.now()}`);
@@ -102,11 +117,12 @@ async function build({ name, description, price, maxUnits, imagePath, address, p
     const templatePath = path.join(SHOP_TEMPLATE_DIR, 'index.template.html');
     if (!fs.existsSync(templatePath)) throw new Error('index.template.html not found in miniFShop-shop/');
     const template = fs.readFileSync(templatePath, 'utf8');
-    const html     = generateShopHtml(template, { name, description, price, maxUnits, imageFile });
+    const html     = generateShopHtml(template, { name, description, price, maxUnits, imageFile,
+        currencyLabel: currConfig.label, tokenId: currConfig.tokenId, currencyIcon: currConfig.icon });
     fs.writeFileSync(path.join(shopTmp, 'index.html'), html);
 
     // Generate dapp.conf
-    fs.writeFileSync(path.join(shopTmp, 'dapp.conf'), generateShopDappConf(name, description));
+    fs.writeFileSync(path.join(shopTmp, 'dapp.conf'), generateShopDappConf(name, description, currency));
 
     // Handle product image
     if (imagePath && fs.existsSync(imagePath)) {

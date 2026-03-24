@@ -179,11 +179,12 @@ function handlePreview(res, filename) {
 async function handleBuild(req, res) {
     try {
         const body    = JSON.parse((await readBody(req)).toString());
-        const { name, description, price, maxUnits, imagePath } = body;
+        const { name, description, price, maxUnits, imagePath, currency } = body;
 
         if (!name) return jsonResponse(res, 400, { error: 'Product name is required' });
         if (!price || parseFloat(price) <= 0) return jsonResponse(res, 400, { error: 'Price must be greater than 0' });
         if (!maxUnits || parseInt(maxUnits) < 1) return jsonResponse(res, 400, { error: 'Max units must be at least 1' });
+        if (currency && currency !== 'MINI' && currency !== 'USDT') return jsonResponse(res, 400, { error: 'Currency must be MINI or USDT' });
 
         const cfg = loadConfig();
         if (!cfg) return jsonResponse(res, 400, { error: 'Vendor not configured — go to Vendor Setup tab first' });
@@ -198,6 +199,7 @@ async function handleBuild(req, res) {
             imagePath:   imagePath && fs.existsSync(imagePath) ? imagePath : null,
             address:     cfg.address,
             pubkey:      cfg.pubkey,
+            currency:    currency || 'MINI',
         }, DIST_DIR);
 
         // Clean up temp image
