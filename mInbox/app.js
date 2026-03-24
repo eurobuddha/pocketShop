@@ -1,9 +1,10 @@
-// mInbox - Vendor Inbox for Trees Shop Orders
+// mInbox - Vendor Inbox for miniFShop Orders
 // Follows miniMerch ChainMail protocol
 
 let myPublicKey = VENDOR_CONFIG ? VENDOR_CONFIG.vendorPublicKey : null;
 let orders = [];
 let currentView = 'inbox';
+let currentStatusFilter = 'ALL';
 let selectedOrder = null;
 let dbReady = false;
 
@@ -173,13 +174,27 @@ function updateStatusDisplay(status) {
     });
 }
 
+function updateFilterCounts() {
+    const base = currentView === 'inbox' ? orders.filter(o => !o.read) : orders;
+    document.getElementById('filter-count-all').textContent       = base.length;
+    document.getElementById('filter-count-paid').textContent      = base.filter(o => (o.status || 'PAID') === 'PAID').length;
+    document.getElementById('filter-count-preparing').textContent = base.filter(o => o.status === 'PREPARING').length;
+    document.getElementById('filter-count-shipped').textContent   = base.filter(o => o.status === 'SHIPPED').length;
+}
+
 function renderOrders() {
     const list = document.getElementById('inbox-list');
-    const filtered = currentView === 'inbox' ? orders.filter(o => !o.read) : orders;
-    
+    let filtered = currentView === 'inbox' ? orders.filter(o => !o.read) : orders;
+
+    // Apply status filter
+    if (currentStatusFilter !== 'ALL') {
+        filtered = filtered.filter(o => (o.status || 'PAID') === currentStatusFilter);
+    }
+
     document.getElementById('unread-count').textContent = orders.filter(o => !o.read).length;
     document.getElementById('total-count').textContent = orders.length;
-    
+    updateFilterCounts();
+
     if (filtered.length === 0) {
         list.innerHTML = `
             <div class="empty-inbox">
@@ -348,6 +363,15 @@ document.getElementById('open-chainmail-btn').onclick = function() {
     });
 };
 
+document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.onclick = function() {
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+        currentStatusFilter = this.dataset.filter;
+        renderOrders();
+    };
+});
+
 document.querySelectorAll('.inbox-tab').forEach(tab => {
     tab.onclick = function() {
         document.querySelectorAll('.inbox-tab').forEach(t => t.classList.remove('active'));
@@ -356,6 +380,67 @@ document.querySelectorAll('.inbox-tab').forEach(tab => {
         renderOrders();
     };
 });
+
+function csvEscape(val) {
+    const str = String(val == null ? '' : val);
+    if (str.includes(',') || str.includes('"') || str.includes('\n') || str.includes('\r')) {
+        return '"' + str.replace(/"/g, '""') + '"';
+    }
+    return str;
+}
+
+function exportToCSV(rows) {
+    const headers = [
+        'Reference', 'Product', 'Amount', 'Currency',
+        'Email', 'Shipping Address', 'Message',
+        'Status', 'Date', 'Time',
+        'TX ID', 'Buyer MX Key', 'Read'
+    ];
+
+    const lines = rows.map(o => {
+        const ts  = o.timestamp ? new Date(parseInt(o.timestamp) < 946684800000 ? parseInt(o.timestamp) * 1000 : parseInt(o.timestamp)) : null;
+        const date = ts && !isNaN(ts) ? ts.toLocaleDateString() : '';
+        const time = ts && !isNaN(ts) ? ts.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+        return [
+            o.ref, o.product, o.amount, o.currency,
+            o.email, o.shipping, o.message,
+            o.status || 'PAID', date, time,
+            o.coinid, o.buyerPublicKey || '', o.read ? 'yes' : 'no'
+        ].map(csvEscape).join(',');
+    });
+
+    return [headers.join(','), ...lines].join('\n');
+}
+
+function downloadFile(data, filename, mimeType) {
+    const blob = new Blob([data], { type: mimeType });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+
+document.getElementById('export-csv-btn').onclick = function() {
+    // Export what the user currently sees (respects view + status filter)
+    let rows = currentView === 'inbox' ? orders.filter(o => !o.read) : orders;
+    if (currentStatusFilter !== 'ALL') {
+        rows = rows.filter(o => (o.status || 'PAID') === currentStatusFilter);
+    }
+
+    if (rows.length === 0) {
+        alert('No orders to export with the current filter.');
+        return;
+    }
+
+    const filterSuffix = currentStatusFilter !== 'ALL' ? '_' + currentStatusFilter.toLowerCase() : '';
+    const date         = new Date().toISOString().split('T')[0];
+    const filename     = `minifshop_orders_${date}${filterSuffix}.csv`;
+    downloadFile(exportToCSV(rows), filename, 'text/csv;charset=utf-8;');
+};
 
 document.getElementById('refresh-btn').onclick = function() {
     console.log('Refresh clicked - scanning for orders...');
@@ -476,7 +561,7 @@ function processOrderCoin(coin) {
                 const order = {
                     ref: decrypted.ref || 'ORDER-' + Date.now(),
                     type: decrypted.type,
-                    product: decrypted.product || 'Trees',
+                    product: decrypted.product || 'miniFShop',
                     amount: decrypted.amount || '1',
                     currency: decrypted.currency || 'MINI',
                     email: decrypted.email || '',

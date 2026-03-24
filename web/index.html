@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>miniFShop Studio</title>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛍</text></svg>">
+</head>
+<body>
+
+  <header class="header">
+    <div class="header-inner">
+      <div class="logo">
+        <span class="logo-icon">🛍</span>
+        <span class="logo-text">miniFShop <span class="logo-badge">Studio</span></span>
+      </div>
+      <div id="config-status" class="config-status"></div>
+    </div>
+  </header>
+
+  <main class="main">
+
+    <!-- Tab bar -->
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="build">Build Shop</button>
+      <button class="tab-btn" data-tab="setup">Vendor Setup</button>
+    </div>
+
+    <!-- ── BUILD TAB ──────────────────────────────────────────────────── -->
+    <section id="tab-build" class="tab-pane active">
+
+      <div class="section-header">
+        <div>
+          <h2>Build Your Shop</h2>
+          <p class="section-subtitle">Configure your product and generate the MiniDapp packages.</p>
+        </div>
+      </div>
+
+      <div class="product-card">
+        <div class="card-body">
+
+          <!-- Left col: fields -->
+          <div class="card-fields">
+
+            <div class="field-row">
+              <div class="field-group field-group--grow">
+                <label for="f-name">Product name <span class="required">*</span></label>
+                <input type="text" id="f-name" placeholder="e.g. Organic Honey" maxlength="120">
+              </div>
+            </div>
+
+            <div class="field-row">
+              <div class="field-group field-group--grow">
+                <label for="f-desc">Description</label>
+                <textarea id="f-desc" rows="2" placeholder="Short product description (optional)" maxlength="300"></textarea>
+              </div>
+            </div>
+
+            <div class="field-row">
+              <div class="field-group">
+                <label for="f-price">Price (MINI) <span class="required">*</span></label>
+                <input type="number" id="f-price" min="0.001" step="0.001" placeholder="1">
+              </div>
+              <div class="field-group">
+                <label for="f-max-units">Max units <span class="required">*</span></label>
+                <input type="number" id="f-max-units" min="1" step="1" placeholder="10" value="10">
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Right col: image -->
+          <div class="card-image-col">
+            <label>Product image</label>
+            <div class="image-drop-zone" id="image-drop-zone">
+              <input type="file" id="f-image-input" accept="image/*" tabindex="-1">
+              <div class="drop-placeholder" id="drop-placeholder">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="32" height="32">
+                  <rect x="3" y="3" width="18" height="18" rx="2"/>
+                  <circle cx="8.5" cy="8.5" r="1.5"/>
+                  <polyline points="21 15 16 10 5 21"/>
+                </svg>
+                <p>Drop image here<br>or <span class="browse-link">browse</span></p>
+              </div>
+              <img id="drop-preview" class="drop-preview hidden" alt="Preview">
+            </div>
+            <p id="image-warn" class="upload-warn hidden"></p>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Build button -->
+      <div class="build-row">
+        <button id="build-btn" class="btn btn-primary btn-lg">
+          <span id="build-btn-text">Build Shop</span>
+          <svg id="build-spinner" class="spinner hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <circle cx="12" cy="12" r="10" stroke-opacity="0.25"/>
+            <path d="M12 2 A10 10 0 0 1 22 12"/>
+          </svg>
+        </button>
+      </div>
+
+      <div id="build-status" class="build-status hidden"></div>
+
+      <!-- Result panel -->
+      <div id="result-panel" class="result-panel hidden">
+        <div class="result-header">
+          <span class="result-icon">✅</span>
+          <h3>Build complete!</h3>
+        </div>
+        <div class="result-files">
+          <div class="result-file">
+            <div class="result-file-info">
+              <div class="result-file-name" id="shop-filename">shop.mds.zip</div>
+              <div class="result-file-meta">Publish this to MiniFS for customers</div>
+            </div>
+            <a id="shop-download-btn" href="#" class="btn btn-download">Download Shop</a>
+          </div>
+          <div class="result-file">
+            <div class="result-file-info">
+              <div class="result-file-name">mInbox.zip</div>
+              <div class="result-file-meta">Install this on your own Minima node</div>
+            </div>
+            <a id="inbox-download-btn" href="#" class="btn btn-download btn-download--secondary">Download Inbox</a>
+          </div>
+        </div>
+        <p id="result-note" class="result-note">Files saved to <code>dist/</code></p>
+      </div>
+
+    </section>
+
+    <!-- ── SETUP TAB ──────────────────────────────────────────────────── -->
+    <section id="tab-setup" class="tab-pane hidden">
+
+      <div class="section-header">
+        <div>
+          <h2>Vendor Setup</h2>
+          <p class="section-subtitle">Saved to <code>~/.minifshop/config.json</code></p>
+        </div>
+      </div>
+
+      <form id="setup-form" class="setup-form" autocomplete="off">
+
+        <div class="setup-field">
+          <label for="setup-address">Minima Address <span class="required">*</span></label>
+          <p class="field-hint">From Wallet MiniDapp → Receive. Must start with <code>0x</code> and be 66 characters.</p>
+          <input type="text" id="setup-address" placeholder="0x465CA86A9B5756F45DEB667A69B3DBEC1B82B211..." spellcheck="false">
+        </div>
+
+        <div class="setup-field">
+          <label for="setup-pubkey">MX Public Key <span class="required">*</span></label>
+          <p class="field-hint">In MDS Terminal, type <code>maxima action:info</code> and copy the <code>mxpublickey</code> value.</p>
+          <input type="text" id="setup-pubkey" placeholder="MxG18HGG6FJ..." spellcheck="false">
+        </div>
+
+        <div class="setup-actions">
+          <button type="submit" class="btn btn-primary">Save Configuration</button>
+          <div id="setup-status" class="setup-status"></div>
+        </div>
+
+      </form>
+
+    </section>
+
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

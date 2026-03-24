@@ -5,6 +5,6 @@ const VENDOR_ADDRESS = "0xA65ED661AD3EA476166F13EDAED88FA9FE3CF3A4998A175A336A30
 const VENDOR_CONFIG = {
     vendorPublicKey: VENDOR_PUBLIC_KEY,
     vendorAddress: VENDOR_ADDRESS,
-    appName: "Trees",
+    appName: "miniFShop",
     version: "1.0.0"
 };

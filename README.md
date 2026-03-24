@@ -26,7 +26,7 @@ From your Minima wallet:
 ### 2. Build Your Shop
 
 ```bash
-node build-trees.js <address> <pubkey> [options]
+node build-miniFShop.js <address> <pubkey> [options]
 
 Options:
   --name <name>         Product name (default: "Product")
@@ -38,7 +38,7 @@ Options:
 
 Example:
 ```bash
-node build-trees.js 0xA65ED661... MxG18HGG... \
+node build-miniFShop.js 0xA65ED661... MxG18HGG... \
   --name "Organic Honey" \
   --description "Pure raw honey from local bees" \
   --price 2.5 \
@@ -73,7 +73,7 @@ node build-trees.js 0xA65ED661... MxG18HGG... \
 
 ```
 miniFShop/
-├── build-trees.js       # Build script
+├── build-miniFShop.js       # Build script
 ├── mInbox/              # Vendor inbox MiniDapp
 │   ├── index.html
 │   ├── app.js
@@ -81,7 +81,7 @@ miniFShop/
 │   ├── style.css
 │   ├── mds.js
 │   └── icon.svg
-└── trees-shop/          # Shop MiniDapp template
+└── miniFShop-shop/          # Shop MiniDapp template
     ├── index.template.html
     ├── style.css
     ├── config.js

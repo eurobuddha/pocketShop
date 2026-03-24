@@ -74,7 +74,7 @@ function showHelp() {
 ╚═══════════════════════════════════════════════════════════╝
 
 Usage:
-  node build-trees.js <address> <pubkey> [options]
+  node build-miniFShop.js <address> <pubkey> [options]
 
 Required:
   address               Your Minima wallet address (0x...)
@@ -89,13 +89,13 @@ Options:
 
 Examples:
   # Basic usage with defaults
-  node build-trees.js 0xA65ED661... MxG18HGG...
+  node build-miniFShop.js 0xA65ED661... MxG18HGG...
 
   # Custom product
-  node build-trees.js 0xA65ED661... MxG18HGG... --name "Honey" --price 2.5 --max-units 5
+  node build-miniFShop.js 0xA65ED661... MxG18HGG... --name "Honey" --price 2.5 --max-units 5
 
   # With custom image
-  node build-trees.js 0xA65ED661... MxG18HGG... --name "Art" --price 10 --image ./art.svg --description "Digital artwork"
+  node build-miniFShop.js 0xA65ED661... MxG18HGG... --name "Art" --price 10 --image ./art.svg --description "Digital artwork"
 `);
 }
 
@@ -143,7 +143,7 @@ function handleImage(imagePath, shopDir) {
 }
 
 function generateShopHtml(config, imageFilename) {
-    const templatePath = path.join(TEMPLATE_DIR, 'trees-shop', 'index.template.html');
+    const templatePath = path.join(TEMPLATE_DIR, 'miniFShop-shop', 'index.template.html');
     
     if (!fs.existsSync(templatePath)) {
         console.error('Error: Template file not found:', templatePath);
@@ -193,7 +193,7 @@ function build(args) {
 
     ensureDir(OUT_DIR);
     
-    const shopDir = path.join(TEMPLATE_DIR, 'trees-shop');
+    const shopDir = path.join(TEMPLATE_DIR, 'miniFShop-shop');
 
     // Handle image
     const imageResult = handleImage(config.image, shopDir);

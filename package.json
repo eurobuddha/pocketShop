@@ -1,0 +1,11 @@
+{
+  "name": "minifshop",
+  "version": "1.0.0",
+  "description": "miniFShop Studio — local builder for Minima shop MiniDapps",
+  "scripts": {
+    "studio": "node studio.js"
+  },
+  "dependencies": {
+    "archiver": "^7.0.1"
+  }
+}
