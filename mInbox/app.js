@@ -513,9 +513,9 @@ function tryDecryptMessage(coinid, stateData, callback) {
             console.log('Decrypted text:', text.substring(0, 100) + '...');
             
             const decrypted = JSON.parse(text);
-            // mxpublickey is no longer in the on-chain envelope (removed to prevent
-            // buyer identity being visible on-chain). buyerMxKey in the payload is
-            // the authoritative source for the buyer's public key.
+            // buyerMxKey in the encrypted payload is the preferred source.
+            // _senderPublicKey from the decrypt envelope is kept as a fallback
+            // for orders sent before the on-chain privacy fix.
             decrypted._senderPublicKey = response.response.message.mxpublickey || null;
 
             console.log('Decrypted order:', JSON.stringify({ type: decrypted.type, ref: decrypted.ref }));
