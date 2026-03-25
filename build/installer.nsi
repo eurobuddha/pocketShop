@@ -42,16 +42,44 @@ Section "Install"
     File /r "..\release\staging\*.*"
 
     ; ── Write the VBScript launcher — runs server with NO visible window ────────
-    ; GetParentFolderName returns a clean path without a trailing backslash,
-    ; avoiding ERROR_INVALID_NAME (0x7B) on CurrentDirectory assignment.
-    ; Chr(34) builds quoted paths without nested quote escaping issues.
+    ; Logs every step to %TEMP%\minifshop-launch.log.
+    ; Shows a MsgBox with the error + log path if anything fails.
     FileOpen  $0 "$INSTDIR\launch.vbs" w
+    FileWrite $0 "On Error Resume Next$\r$\n"
+    FileWrite $0 "$\r$\n"
     FileWrite $0 "Set fso = CreateObject($\"Scripting.FileSystemObject$\")$\r$\n"
     FileWrite $0 "Set sh  = CreateObject($\"WScript.Shell$\")$\r$\n"
-    FileWrite $0 "Dim d$\r$\n"
-    FileWrite $0 "d = fso.GetParentFolderName(WScript.ScriptFullName)$\r$\n"
+    FileWrite $0 "$\r$\n"
+    FileWrite $0 "Dim d, logFile$\r$\n"
+    FileWrite $0 "d       = fso.GetParentFolderName(WScript.ScriptFullName)$\r$\n"
+    FileWrite $0 "logFile = sh.ExpandEnvironmentStrings($\"%TEMP%$\") & $\"\minifshop-launch.log$\"$\r$\n"
+    FileWrite $0 "$\r$\n"
+    FileWrite $0 "Set f = fso.OpenTextFile(logFile, 2, True)$\r$\n"
+    FileWrite $0 "f.WriteLine $\"--- $\" & Now & $\" ---$\"$\r$\n"
+    FileWrite $0 "f.WriteLine $\"script:    $\" & WScript.ScriptFullName$\r$\n"
+    FileWrite $0 "f.WriteLine $\"dir:       $\" & d$\r$\n"
+    FileWrite $0 "f.WriteLine $\"node.exe:  $\" & fso.FileExists(d & $\"\node.exe$\")$\r$\n"
+    FileWrite $0 "f.WriteLine $\"studio.js: $\" & fso.FileExists(d & $\"\studio.js$\")$\r$\n"
+    FileWrite $0 "$\r$\n"
     FileWrite $0 "sh.CurrentDirectory = d$\r$\n"
-    FileWrite $0 "sh.Run Chr(34) & d & $\"\node.exe$\" & Chr(34) & $\" $\" & Chr(34) & d & $\"\studio.js$\" & Chr(34), 0, False$\r$\n"
+    FileWrite $0 "f.WriteLine $\"chdir err: $\" & Err.Number & $\" $\" & Err.Description$\r$\n"
+    FileWrite $0 "Err.Clear$\r$\n"
+    FileWrite $0 "$\r$\n"
+    FileWrite $0 "Dim cmd$\r$\n"
+    FileWrite $0 "cmd = Chr(34) & d & $\"\node.exe$\" & Chr(34) & $\" $\" & Chr(34) & d & $\"\studio.js$\" & Chr(34)$\r$\n"
+    FileWrite $0 "f.WriteLine $\"command:   $\" & cmd$\r$\n"
+    FileWrite $0 "$\r$\n"
+    FileWrite $0 "sh.Run cmd, 0, False$\r$\n"
+    FileWrite $0 "f.WriteLine $\"run err:   $\" & Err.Number & $\" $\" & Err.Description$\r$\n"
+    FileWrite $0 "$\r$\n"
+    FileWrite $0 "If Err.Number <> 0 Then$\r$\n"
+    FileWrite $0 "    f.WriteLine $\"FAILED$\"$\r$\n"
+    FileWrite $0 "    f.Close$\r$\n"
+    FileWrite $0 "    MsgBox $\"miniFShop Studio failed to start.$\" & vbCrLf & vbCrLf & Err.Description & vbCrLf & vbCrLf & $\"See log: $\" & logFile, 16, $\"miniFShop Studio$\"$\r$\n"
+    FileWrite $0 "Else$\r$\n"
+    FileWrite $0 "    f.WriteLine $\"OK$\"$\r$\n"
+    FileWrite $0 "    f.Close$\r$\n"
+    FileWrite $0 "End If$\r$\n"
     FileClose $0
 
     ; ── Write uninstaller ────────────────────────────────────────────────────
