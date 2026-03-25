@@ -230,6 +230,8 @@ function handleDownload(res, filename) {
 
 // ── Server ────────────────────────────────────────────────────────────────────
 
+let serverRef = null;
+
 function createServer() {
     return http.createServer(async (req, res) => {
         res.setHeader('Access-Control-Allow-Origin', '*');
@@ -246,6 +248,11 @@ function createServer() {
 
             if (url === '/api/config' && req.method === 'GET')  return handleConfig(res);
             if (url === '/api/setup'  && req.method === 'POST') return await handleSetup(req, res);
+            if (url === '/api/shutdown' && req.method === 'POST') {
+                jsonResponse(res, 200, { ok: true });
+                serverRef.close(() => process.exit(0));
+                return;
+            }
             if (url === '/api/upload-image' && req.method === 'POST') return await handleUploadImage(req, res);
             if (url === '/api/build'  && req.method === 'POST') return await handleBuild(req, res);
 
@@ -264,7 +271,8 @@ function start() {
     ensureDir(TMP_IMG);
     ensureDir(DIST_DIR);
 
-    const server = createServer();
+    serverRef    = createServer();
+    const server = serverRef;
     const url    = `http://localhost:${PORT}`;
 
     server.listen(PORT, '127.0.0.1', () => {

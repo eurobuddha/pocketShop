@@ -260,6 +260,9 @@ input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; }
 
 .btn-download { background: var(--teal); color: #000; }
 .btn-download:hover { background: #00eecc; color: #000; }
+
+.btn-stop { background: transparent; color: #e05555; border: 1px solid #e05555; font-size: 0.78rem; padding: 0.3rem 0.75rem; }
+.btn-stop:hover { background: #e05555; color: #fff; }
 .btn-download--secondary { background: var(--bg-hover); color: var(--text); border: 1px solid var(--teal); }
 .btn-download--secondary:hover { background: var(--bg-card); }
 

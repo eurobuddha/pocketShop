@@ -12,6 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
     wireCurrencyPicker();
     document.getElementById('build-btn').addEventListener('click', buildShop);
     document.getElementById('setup-form').addEventListener('submit', saveSetup);
+    document.getElementById('stop-btn').addEventListener('click', stopServer);
 });
 
 // ── Tabs ──────────────────────────────────────────────────────────────────────
@@ -329,6 +330,20 @@ function showResult(data) {
 
     panel.classList.remove('hidden');
     panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// ── Stop server ───────────────────────────────────────────────────────────────
+async function stopServer() {
+    if (!confirm('Stop the miniFShop Studio server?')) return;
+    try {
+        await fetch('/api/shutdown', { method: 'POST' });
+    } catch (_) { /* server closed before response — that's fine */ }
+    document.body.innerHTML = `
+        <div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;flex-direction:column;gap:1rem;color:#555">
+            <div style="font-size:2rem">🛑</div>
+            <h2 style="margin:0">miniFShop Studio stopped</h2>
+            <p style="margin:0;font-size:0.9rem">You can close this tab.</p>
+        </div>`;
 }
 
 // ── Tab-link delegation ───────────────────────────────────────────────────────
