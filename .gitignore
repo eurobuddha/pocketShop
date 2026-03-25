@@ -4,3 +4,4 @@ dist/
 *.zip
 *.log
 release/
+build/.node-win-cache/

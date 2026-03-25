@@ -9,7 +9,8 @@
   "scripts": {
     "studio": "node studio.js",
     "build": "node build-miniFShop.js",
-    "build:mac": "bash build/build-mac.sh"
+    "build:mac": "bash build/build-mac.sh",
+    "build:win": "bash build/build-win.sh"
   },
   "pkg": {
     "scripts": [
