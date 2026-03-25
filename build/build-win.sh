@@ -73,26 +73,13 @@ cp "$PROJECT_DIR/web/app.js"      "$STAGING/web/"
 cp -r "$PROJECT_DIR/miniFShop-shop/"  "$STAGING/miniFShop-shop/"
 cp -r "$PROJECT_DIR/mInbox/"         "$STAGING/mInbox/"
 
-# Copy dependencies (archiver + all transitive deps)
-mkdir -p "$STAGING/node_modules"
-cp -r "$PROJECT_DIR/node_modules/archiver"          "$STAGING/node_modules/" 2>/dev/null || true
-cp -r "$PROJECT_DIR/node_modules/archiver-utils"    "$STAGING/node_modules/" 2>/dev/null || true
-cp -r "$PROJECT_DIR/node_modules/async"             "$STAGING/node_modules/" 2>/dev/null || true
-cp -r "$PROJECT_DIR/node_modules/buffer-crc32"      "$STAGING/node_modules/" 2>/dev/null || true
-cp -r "$PROJECT_DIR/node_modules/readable-stream"   "$STAGING/node_modules/" 2>/dev/null || true
-cp -r "$PROJECT_DIR/node_modules/readdir-glob"      "$STAGING/node_modules/" 2>/dev/null || true
-cp -r "$PROJECT_DIR/node_modules/glob"              "$STAGING/node_modules/" 2>/dev/null || true
-cp -r "$PROJECT_DIR/node_modules/zip-stream"        "$STAGING/node_modules/" 2>/dev/null || true
-cp -r "$PROJECT_DIR/node_modules/compress-commons"  "$STAGING/node_modules/" 2>/dev/null || true
-cp -r "$PROJECT_DIR/node_modules/crc-32"            "$STAGING/node_modules/" 2>/dev/null || true
-cp -r "$PROJECT_DIR/node_modules/lazystream"        "$STAGING/node_modules/" 2>/dev/null || true
-cp -r "$PROJECT_DIR/node_modules/lodash"            "$STAGING/node_modules/" 2>/dev/null || true
-cp -r "$PROJECT_DIR/node_modules/normalize-path"    "$STAGING/node_modules/" 2>/dev/null || true
-
-# Write a minimal package.json so Node can resolve modules
-cat > "$STAGING/package.json" << PKGJSON
-{ "name": "minifshop-studio", "version": "${VERSION}", "main": "studio.js" }
-PKGJSON
+# Install production dependencies via npm ci (resolves full transitive tree)
+cp "$PROJECT_DIR/package.json"       "$STAGING/package.json"
+cp "$PROJECT_DIR/package-lock.json"  "$STAGING/package-lock.json"
+cd "$STAGING"
+npm ci --omit=dev --silent
+rm "$STAGING/package-lock.json"
+cd "$PROJECT_DIR"
 
 echo "✓  App files staged"
 
