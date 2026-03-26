@@ -1,14 +1,14 @@
 {
-  "name": "minifshop",
+  "name": "pocketshop",
   "version": "1.0.0",
   "description": "Lightweight MiniDapp shop template for selling products on the Minima blockchain. Includes a shop, vendor inbox, and Studio web UI builder.",
   "main": "studio.js",
   "bin": {
-    "minifshop": "studio.js"
+    "pocketshop": "studio.js"
   },
   "scripts": {
     "studio": "node studio.js",
-    "build": "node build-miniFShop.js",
+    "build": "node build-pocketshop.js",
     "build:mac": "bash build/build-mac.sh",
     "build:win": "bash build/build-win.sh"
   },
@@ -19,7 +19,7 @@
     ],
     "assets": [
       "web/**/*",
-      "miniFShop-shop/**/*",
+      "pocketshop-shop/**/*",
       "mInbox/**/*"
     ],
     "outputPath": "release"
@@ -36,16 +36,16 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/eurobuddha/miniFShop.git"
+    "url": "https://github.com/eurobuddha/pocketShop.git"
   },
-  "homepage": "https://github.com/eurobuddha/miniFShop",
+  "homepage": "https://github.com/eurobuddha/pocketShop",
   "files": [
     "studio.js",
     "studio-builder.js",
-    "build-miniFShop.js",
+    "build-pocketshop.js",
     "web/",
     "mInbox/",
-    "miniFShop-shop/",
+    "pocketshop-shop/",
     "build/"
   ],
   "engines": {

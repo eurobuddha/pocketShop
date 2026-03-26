@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ─────────────────────────────────────────────────────────────────────────────
-# miniFShop Studio — Windows installer builder (runs on macOS)
+# Pocket Shop Studio — Windows installer builder (runs on macOS)
 # Prerequisites: brew install nsis imagemagick
 # Usage: npm run build:win
 # ─────────────────────────────────────────────────────────────────────────────
@@ -17,7 +17,7 @@ STAGING="$OUT_DIR/staging"
 
 echo ""
 echo "╔═══════════════════════════════════════════════════════════╗"
-echo "║       miniFShop Studio — Windows build                   ║"
+echo "║       Pocket Shop Studio — Windows build                   ║"
 echo "╚═══════════════════════════════════════════════════════════╝"
 echo ""
 
@@ -30,7 +30,7 @@ fi
 cd "$PROJECT_DIR"
 
 # ── 2. Clean previous Windows release files only (preserve Mac .dmg) ─────────
-rm -rf "$OUT_DIR/staging" "$OUT_DIR/miniFShop-Studio-"*"-Setup.exe"
+rm -rf "$OUT_DIR/staging" "$OUT_DIR/PocketShop-Studio-"*"-Setup.exe"
 mkdir -p "$OUT_DIR" "$STAGING"
 echo "✓  Output directory: $OUT_DIR"
 
@@ -57,7 +57,7 @@ echo ""
 echo "📦  Staging app source files..."
 
 mkdir -p "$STAGING/web"
-mkdir -p "$STAGING/miniFShop-shop"
+mkdir -p "$STAGING/pocketshop-shop"
 mkdir -p "$STAGING/mInbox"
 
 # Copy source files (studio.js and studio-builder.js live at root)
@@ -70,7 +70,7 @@ cp "$PROJECT_DIR/web/style.css"   "$STAGING/web/"
 cp "$PROJECT_DIR/web/app.js"      "$STAGING/web/"
 
 # Copy MiniDapp templates
-cp -r "$PROJECT_DIR/miniFShop-shop/"  "$STAGING/miniFShop-shop/"
+cp -r "$PROJECT_DIR/pocketshop-shop/"  "$STAGING/pocketshop-shop/"
 cp -r "$PROJECT_DIR/mInbox/"         "$STAGING/mInbox/"
 
 # Install production dependencies via npm ci (resolves full transitive tree)
@@ -91,7 +91,7 @@ if [ ! -f "$SCRIPT_DIR/icon.ico" ]; then
     MAGICK_CMD="magick"
     command -v magick &> /dev/null || MAGICK_CMD="convert"
     for size in 16 32 48 64 128 256; do
-        $MAGICK_CMD -background none "$PROJECT_DIR/miniFShop-shop/icon.svg" -resize ${size}x${size} "/tmp/mfs_icon_${size}.png" 2>/dev/null
+        $MAGICK_CMD -background none "$PROJECT_DIR/pocketshop-shop/icon.svg" -resize ${size}x${size} "/tmp/mfs_icon_${size}.png" 2>/dev/null
     done
     $MAGICK_CMD /tmp/mfs_icon_16.png /tmp/mfs_icon_32.png /tmp/mfs_icon_48.png \
         /tmp/mfs_icon_64.png /tmp/mfs_icon_128.png /tmp/mfs_icon_256.png \
@@ -109,7 +109,7 @@ cd "$SCRIPT_DIR"
 makensis installer.nsi
 cd "$PROJECT_DIR"
 
-INSTALLER="miniFShop-Studio-$VERSION-Setup.exe"
+INSTALLER="PocketShop-Studio-$VERSION-Setup.exe"
 rm -rf "$STAGING"
 echo "✓  Installer: $OUT_DIR/$INSTALLER"
 

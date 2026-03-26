@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// miniFShop Studio — local web UI for building single-product shops
+// Pocket Shop Studio — local web UI for building single-product shops
 // Usage: node studio.js
 
 'use strict';
@@ -18,11 +18,11 @@ const PORT = 3456;
 // filesystem. Assets (web/, templates) are read from the snapshot — that's fine.
 const IS_PKG   = !!process.pkg;
 const WEB_DIR  = path.join(__dirname, 'web');
-const DOCS_DIR = path.join(os.homedir(), 'Documents', 'miniFShop');
+const DOCS_DIR = path.join(os.homedir(), 'Documents', 'PocketShop');
 const DIST_DIR = IS_PKG ? path.join(DOCS_DIR, 'dist') : path.join(__dirname, 'dist');
-const TMP_IMG  = path.join(os.tmpdir(), 'minifshop-images');
+const TMP_IMG  = path.join(os.tmpdir(), 'pocketshop-images');
 
-const CONFIG_DIR  = path.join(os.homedir(), '.minifshop');
+const CONFIG_DIR  = path.join(os.homedir(), '.pocketshop');
 const CONFIG_PATH = path.join(CONFIG_DIR, 'config.json');
 
 // Require builder at top level so pkg bundles it correctly
@@ -278,7 +278,7 @@ function start() {
     server.listen(PORT, '127.0.0.1', () => {
         console.log(`
 ╔═══════════════════════════════════════════════════════════╗
-║            🛍  miniFShop Studio                           ║
+║            🛍  Pocket Shop Studio                          ║
 ╠═══════════════════════════════════════════════════════════╣
 ║  Local server running at:                                  ║
 ║  ${url.padEnd(52)}║
@@ -300,7 +300,7 @@ function start() {
         process.exit(1);
     });
 
-    const shutdown = () => { console.log('\n\nStopping miniFShop Studio...'); server.close(() => process.exit(0)); };
+    const shutdown = () => { console.log('\n\nStopping Pocket Shop Studio...'); server.close(() => process.exit(0)); };
     process.on('SIGINT',  shutdown);
     process.on('SIGTERM', shutdown);
 }

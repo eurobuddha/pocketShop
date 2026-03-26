@@ -1,14 +1,14 @@
 'use strict';
 
 // studio-builder.js
-// Generates shop.mds.zip + mInbox.zip from miniFShop templates.
+// Generates shop.mds.zip + mInbox.zip from Pocket Shop templates.
 // Called by studio.js after form submission.
 
 const fs      = require('fs');
 const path    = require('path');
 const archiver = require('archiver');
 
-const SHOP_TEMPLATE_DIR  = path.join(__dirname, 'miniFShop-shop');
+const SHOP_TEMPLATE_DIR  = path.join(__dirname, 'pocketshop-shop');
 const INBOX_TEMPLATE_DIR = path.join(__dirname, 'mInbox');
 const DEFAULT_IMAGE      = path.join(SHOP_TEMPLATE_DIR, 'product.svg');
 
@@ -69,7 +69,7 @@ const VENDOR_CONFIG = {
 function generateShopDappConf(name, description, currency) {
     const currLabel = currency === 'USDT' ? 'USDT' : 'Minima';
     return JSON.stringify({
-        name:        name.replace(/[^a-zA-Z0-9 \-]/g, '').trim() || 'miniFShop',
+        name:        name.replace(/[^a-zA-Z0-9 \-]/g, '').trim() || 'Pocket Shop',
         icon:        'icon.svg',
         version:     '1.0.0',
         description: description || `Buy ${name} with ${currLabel}`,
@@ -115,7 +115,7 @@ async function build({ name, description, price, maxUnits, imagePath, address, p
 
     // Generate index.html from template
     const templatePath = path.join(SHOP_TEMPLATE_DIR, 'index.template.html');
-    if (!fs.existsSync(templatePath)) throw new Error('index.template.html not found in miniFShop-shop/');
+    if (!fs.existsSync(templatePath)) throw new Error('index.template.html not found in pocketshop-shop/');
     const template = fs.readFileSync(templatePath, 'utf8');
     const html     = generateShopHtml(template, { name, description, price, maxUnits, imageFile,
         currencyLabel: currConfig.label, tokenId: currConfig.tokenId, currencyIcon: currConfig.icon });

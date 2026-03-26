@@ -1,21 +1,21 @@
 #!/usr/bin/env bash
 # ─────────────────────────────────────────────────────────────────────────────
-# miniFShop Studio — macOS .app + .dmg builder
+# Pocket Shop Studio — macOS .app + .dmg builder
 # Run from the project root: npm run build:mac
 # ─────────────────────────────────────────────────────────────────────────────
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
-APP_NAME="miniFShop Studio"
-BINARY_NAME="minifshop-studio"
+APP_NAME="Pocket Shop Studio"
+BINARY_NAME="pocketshop-studio"
 VERSION="1.0.0"
 OUT_DIR="$PROJECT_DIR/release"
 APP_DIR="$OUT_DIR/$APP_NAME.app"
 
 echo ""
 echo "╔═══════════════════════════════════════════════════════════╗"
-echo "║          miniFShop Studio — macOS build                   ║"
+echo "║          Pocket Shop Studio — macOS build                   ║"
 echo "╚═══════════════════════════════════════════════════════════╝"
 echo ""
 
@@ -34,7 +34,7 @@ if ! npx --no-install @yao-pkg/pkg --version &> /dev/null 2>&1; then
 fi
 
 # ── 2. Clean previous Mac release files ──────────────────────────────────────
-rm -rf "$OUT_DIR/miniFShop Studio.app" "$OUT_DIR/miniFShop-Studio-"*".dmg"
+rm -rf "$OUT_DIR/Pocket Shop Studio.app" "$OUT_DIR/PocketShop-Studio-"*".dmg"
 mkdir -p "$OUT_DIR"
 echo "✓  Output directory: $OUT_DIR"
 
@@ -51,7 +51,7 @@ cat > "$PROJECT_DIR/pkg.config.json" << 'PKGEOF'
     ],
     "assets": [
       "web/**/*",
-      "miniFShop-shop/**/*",
+      "pocketshop-shop/**/*",
       "mInbox/**/*"
     ]
   }
@@ -83,15 +83,15 @@ chmod +x "$APP_DIR/Contents/MacOS/$BINARY_NAME"
 # Launcher shell script — keeps the process alive so macOS is happy
 cat > "$APP_DIR/Contents/MacOS/launcher" << 'EOF'
 #!/bin/bash
-# miniFShop Studio launcher
+# Pocket Shop Studio launcher
 DIR="$(cd "$(dirname "$0")" && pwd)"
-exec "$DIR/minifshop-studio"
+exec "$DIR/pocketshop-studio"
 EOF
 chmod +x "$APP_DIR/Contents/MacOS/launcher"
 
 cp "$SCRIPT_DIR/Info.plist" "$APP_DIR/Contents/Info.plist"
 cp "$SCRIPT_DIR/icon.icns"  "$APP_DIR/Contents/Resources/icon.icns"
-echo -n "APPLmfss" > "$APP_DIR/Contents/PkgInfo"
+echo -n "APPLpkss" > "$APP_DIR/Contents/PkgInfo"
 
 rm "$OUT_DIR/$BINARY_NAME"
 echo "✓  .app bundle created: $APP_DIR"
@@ -100,7 +100,7 @@ echo "✓  .app bundle created: $APP_DIR"
 echo ""
 echo "💿  Preparing .dmg..."
 
-DMG_NAME="miniFShop-Studio-$VERSION.dmg"
+DMG_NAME="PocketShop-Studio-$VERSION.dmg"
 DMG_PATH="$OUT_DIR/$DMG_NAME"
 TMP_DMG_DIR="$OUT_DIR/dmg_staging"
 
@@ -120,7 +120,7 @@ echo "✓  Signed and quarantine cleared"
 
 # ── 7. Create .dmg ───────────────────────────────────────────────────────────
 hdiutil create \
-    -volname "miniFShop Studio" \
+    -volname "Pocket Shop Studio" \
     -srcfolder "$TMP_DMG_DIR" \
     -ov \
     -format UDZO \
@@ -139,8 +139,8 @@ printf "║  💿 DMG:  %-48s║\n" "$DMG_NAME"
 printf "║  📁 In:   %-48s║\n" "release/"
 echo "╠═══════════════════════════════════════════════════════════╣"
 echo "║  To install:                                              ║"
-echo "║    Open release/miniFShop-Studio-$VERSION.dmg             ║"
-echo "║    Drag miniFShop Studio to Applications                  ║"
+echo "║    Open release/PocketShop-Studio-$VERSION.dmg             ║"
+echo "║    Drag Pocket Shop Studio to Applications                  ║"
 echo "║                                                           ║"
 echo "║  First launch: right-click → Open (bypasses Gatekeeper)  ║"
 echo "╚═══════════════════════════════════════════════════════════╝"

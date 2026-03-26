@@ -1,4 +1,4 @@
-# 🛍 miniFShop
+# 🛍 Pocket Shop
 
 A lightweight shop template for selling products on the **Minima blockchain**. Accept payments in MINI or USDT. Orders are encrypted on-chain — only you (the vendor) can read them.
 
@@ -8,7 +8,7 @@ A lightweight shop template for selling products on the **Minima blockchain**. A
 
 Get from zero to a deployed shop in about 5 minutes:
 
-1. **Download Studio** — Grab the installer for your OS from [Releases](https://github.com/eurobuddha/miniFShop/releases)
+1. **Download Studio** — Grab the installer for your OS from [Releases](https://github.com/eurobuddha/pocketShop/releases)
    - macOS: Open `.dmg`, drag app to Applications
    - Windows: Run `.exe` installer (no admin needed)
 
@@ -32,9 +32,9 @@ Get from zero to a deployed shop in about 5 minutes:
 
 ---
 
-## 🤔 What is miniFShop?
+## 🤔 What is Pocket Shop?
 
-miniFShop is three things bundled together:
+Pocket Shop is three things bundled together:
 
 | Component | Who uses it | What it does |
 |---|---|---|
@@ -98,12 +98,12 @@ Studio is a local web app that runs on your computer. It builds shops without an
 
 ### Download & Install
 
-Get the latest version from [Releases](https://github.com/eurobuddha/miniFShop/releases):
+Get the latest version from [Releases](https://github.com/eurobuddha/pocketShop/releases):
 
 | OS | File | Install method |
 |---|---|---|
-| **macOS** | `miniFShop-Studio-X.X.X.dmg` | Open → drag to Applications → double-click |
-| **Windows** | `miniFShop-Studio-X.X.X-Setup.exe` | Double-click → install → launch from Start Menu |
+| **macOS** | `PocketShop-Studio-X.X.X.dmg` | Open → drag to Applications → double-click |
+| **Windows** | `PocketShop-Studio-X.X.X-Setup.exe` | Double-click → install → launch from Start Menu |
 
 > **First launch on macOS:** Right-click the app → Open → click "Open" (bypasses Gatekeeper)
 > **First launch on Windows:** Click "More info" → "Run anyway" (bypasses SmartScreen)
@@ -116,7 +116,7 @@ Studio opens automatically at `http://localhost:3456`. You'll see two tabs:
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│  miniFShop Studio                      [Setup] [Build]  │
+│  Pocket Shop Studio                      [Setup] [Build]  │
 ├─────────────────────────────────────────────────────────┤
 │                                                         │
 │  Vendor Setup                                           │
@@ -139,13 +139,13 @@ Studio opens automatically at `http://localhost:3456`. You'll see two tabs:
 - **Minima Address**: Your wallet address (starts with `0x`)
 - **MX Public Key**: From `maxima action:info` in MDS Terminal
 
-Click **Save Configuration**. Your details are stored locally at `~/.minifshop/config.json`.
+Click **Save Configuration**. Your details are stored locally at `~/.pocketshop/config.json`.
 
 #### Tab 2: Build Shop
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│  miniFShop Studio                      [Setup] [Build]  │
+│  Pocket Shop Studio                      [Setup] [Build]  │
 ├─────────────────────────────────────────────────────────┤
 │                                                         │
 │  Build Your Shop                                        │
@@ -202,13 +202,13 @@ Click **Build Shop**. When complete, you'll get download links for:
 Prefer the terminal? You can build shops from the command line:
 
 ```bash
-git clone https://github.com/eurobuddha/miniFShop.git
-cd miniFShop
+git clone https://github.com/eurobuddha/pocketShop.git
+cd pocketShop
 npm install
 ```
 
 ```bash
-node build-miniFShop.js <address> <pubkey> [options]
+node build-pocketshop.js <address> <pubkey> [options]
 ```
 
 | Option | Description | Default |
@@ -224,7 +224,7 @@ node build-miniFShop.js <address> <pubkey> [options]
 **Example:**
 
 ```bash
-node build-miniFShop.js \
+node build-pocketshop.js \
   0xA65ED661F4B6580AC93BEA7E07A36D98CF3EA0E2F3B5D1E7A92C4B6F0D3E5A1 \
   MxG18HGG4D3F2A1B9C7E6D5F4A3B2C1D0E9F8A7B6C5D4E3F2A1B0C9D8E7F6A5B4 \
   --name "Organic Honey" \
@@ -297,7 +297,7 @@ All replies are end-to-end encrypted.
 
 ### General
 
-**Q: Does miniFShop support both MINI and USDT?**
+**Q: Does Pocket Shop support both MINI and USDT?**
 A: Yes! Choose your currency when building the shop. USDT is the bridged version on Minima.
 
 **Q: Can I sell multiple products in one shop?**
@@ -371,18 +371,18 @@ When a customer places an order, these fields are encrypted with your Maxima pub
 ## 📁 File Structure
 
 ```
-miniFShop/
+pocketShop/
 │
 ├── studio.js                   # Studio server (Node.js, port 3456)
 ├── studio-builder.js           # Shop/inbox zip generator
-├── build-miniFShop.js          # CLI build entry point
+├── build-pocketshop.js          # CLI build entry point
 │
 ├── web/                       # Studio web UI
 │   ├── index.html             # Two-tab UI
 │   ├── app.js                 # Frontend logic
 │   └── style.css
 │
-├── miniFShop-shop/            # Shop MiniDapp template
+├── pocketshop-shop/            # Shop MiniDapp template
 │   ├── index.template.html    # HTML template
 │   ├── config.js              # Vendor config (generated)
 │   ├── dapp.conf              # MDS manifest
@@ -403,8 +403,8 @@ miniFShop/
 │   └── mInbox.zip
 │
 └── release/                   # Installer output
-    ├── miniFShop-Studio-*.dmg
-    └── miniFShop-Studio-*.exe
+    ├── PocketShop-Studio-*.dmg
+    └── PocketShop-Studio-*.exe
 ```
 
 ---
@@ -419,7 +419,7 @@ Want to contribute or build your own installers? Here's how:
 npm run build:mac
 ```
 
-Output: `release/miniFShop-Studio-X.X.X.dmg`
+Output: `release/PocketShop-Studio-X.X.X.dmg`
 
 Requirements: Node.js, macOS (uses Xcode tools for signing)
 
@@ -429,7 +429,7 @@ Requirements: Node.js, macOS (uses Xcode tools for signing)
 npm run build:win
 ```
 
-Output: `release/miniFShop-Studio-X.X.X-Setup.exe`
+Output: `release/PocketShop-Studio-X.X.X-Setup.exe`
 
 Requirements: `makensis` (NSIS), ImageMagick (`convert`)
 

@@ -68,13 +68,13 @@ function parseArgs(args) {
 function showHelp() {
     console.log(`
 ╔═══════════════════════════════════════════════════════════╗
-║          MiniShop Builder                                 ║
+║          Pocket Shop Builder                                 ║
 ╠═══════════════════════════════════════════════════════════╣
 ║  Generates a shop + mInbox with your config               ║
 ╚═══════════════════════════════════════════════════════════╝
 
 Usage:
-  node build-miniFShop.js <address> <pubkey> [options]
+  node build-pocketshop.js <address> <pubkey> [options]
 
 Required:
   address               Your Minima wallet address (0x...)
@@ -89,13 +89,13 @@ Options:
 
 Examples:
   # Basic usage with defaults
-  node build-miniFShop.js 0xA65ED661... MxG18HGG...
+  node build-pocketshop.js 0xA65ED661... MxG18HGG...
 
   # Custom product
-  node build-miniFShop.js 0xA65ED661... MxG18HGG... --name "Honey" --price 2.5 --max-units 5
+  node build-pocketshop.js 0xA65ED661... MxG18HGG... --name "Honey" --price 2.5 --max-units 5
 
   # With custom image
-  node build-miniFShop.js 0xA65ED661... MxG18HGG... --name "Art" --price 10 --image ./art.svg --description "Digital artwork"
+  node build-pocketshop.js 0xA65ED661... MxG18HGG... --name "Art" --price 10 --image ./art.svg --description "Digital artwork"
 `);
 }
 
@@ -143,7 +143,7 @@ function handleImage(imagePath, shopDir) {
 }
 
 function generateShopHtml(config, imageFilename) {
-    const templatePath = path.join(TEMPLATE_DIR, 'miniFShop-shop', 'index.template.html');
+    const templatePath = path.join(TEMPLATE_DIR, 'pocketshop-shop', 'index.template.html');
     
     if (!fs.existsSync(templatePath)) {
         console.error('Error: Template file not found:', templatePath);
@@ -182,7 +182,7 @@ function build(args) {
 
     console.log(`
 ╔═══════════════════════════════════════════════════════════╗
-║          MiniShop Builder                                 ║
+║          Pocket Shop Builder                                 ║
 ╚═══════════════════════════════════════════════════════════╝
 📦 Address:     ${config.address.substring(0, 18)}...
 🔐 PubKey:      ${config.pubkey.substring(0, 18)}...
@@ -193,7 +193,7 @@ function build(args) {
 
     ensureDir(OUT_DIR);
     
-    const shopDir = path.join(TEMPLATE_DIR, 'miniFShop-shop');
+    const shopDir = path.join(TEMPLATE_DIR, 'pocketshop-shop');
 
     // Handle image
     const imageResult = handleImage(config.image, shopDir);

@@ -1,20 +1,20 @@
 ; ─────────────────────────────────────────────────────────────────────────────
-; miniFShop Studio — Windows NSIS Installer
+; Pocket Shop Studio — Windows NSIS Installer
 ; Ships portable node.exe + app source — no pkg binary, no cross-compile issues
 ; Per-user install, no UAC required
 ; ─────────────────────────────────────────────────────────────────────────────
 
 Unicode True
 
-!define APP_NAME       "miniFShop Studio"
+!define APP_NAME       "Pocket Shop Studio"
 !define APP_VERSION    "1.0.0"
-!define APP_PUBLISHER  "miniFShop"
-!define APP_URL        "https://github.com/eurobuddha/miniFShop"
+!define APP_PUBLISHER  "Pocket Shop"
+!define APP_URL        "https://github.com/eurobuddha/pocketShop"
 !define INSTALL_DIR    "$LOCALAPPDATA\${APP_NAME}"
 !define UNINSTALL_KEY  "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APP_NAME}"
 
 Name                   "${APP_NAME}"
-OutFile                "..\release\miniFShop-Studio-${APP_VERSION}-Setup.exe"
+OutFile                "..\release\PocketShop-Studio-${APP_VERSION}-Setup.exe"
 InstallDir             "${INSTALL_DIR}"
 InstallDirRegKey       HKCU "${UNINSTALL_KEY}" "InstallLocation"
 RequestExecutionLevel  user
@@ -29,7 +29,7 @@ VIAddVersionKey "ProductName"      "${APP_NAME}"
 VIAddVersionKey "ProductVersion"   "${APP_VERSION}"
 VIAddVersionKey "CompanyName"      "${APP_PUBLISHER}"
 VIAddVersionKey "FileDescription"  "${APP_NAME} Installer"
-VIAddVersionKey "LegalCopyright"   "Copyright 2026 miniFShop"
+VIAddVersionKey "LegalCopyright"   "Copyright 2026 Pocket Shop"
 VIAddVersionKey "FileVersion"      "${APP_VERSION}"
 
 Page instfiles
@@ -42,7 +42,7 @@ Section "Install"
     File /r "..\release\staging\*.*"
 
     ; ── Write the VBScript launcher — runs server with NO visible window ────────
-    ; Logs every step to %TEMP%\minifshop-launch.log.
+    ; Logs every step to %TEMP%\pocketshop-launch.log.
     ; Shows a MsgBox with the error + log path if anything fails.
     FileOpen  $0 "$INSTDIR\launch.vbs" w
     FileWrite $0 "On Error Resume Next$\r$\n"
@@ -52,7 +52,7 @@ Section "Install"
     FileWrite $0 "$\r$\n"
     FileWrite $0 "Dim d, logFile$\r$\n"
     FileWrite $0 "d       = fso.GetParentFolderName(WScript.ScriptFullName)$\r$\n"
-    FileWrite $0 "logFile = sh.ExpandEnvironmentStrings($\"%TEMP%$\") & $\"\minifshop-launch.log$\"$\r$\n"
+    FileWrite $0 "logFile = sh.ExpandEnvironmentStrings($\"%TEMP%$\") & $\"\pocketshop-launch.log$\"$\r$\n"
     FileWrite $0 "$\r$\n"
     FileWrite $0 "Set f = fso.OpenTextFile(logFile, 8, True)$\r$\n"
     FileWrite $0 "f.WriteLine $\"--- $\" & Now & $\" ---$\"$\r$\n"
@@ -79,7 +79,7 @@ Section "Install"
     FileWrite $0 "sh.Run runCmd, 0, False$\r$\n"
     FileWrite $0 "$\r$\n"
     FileWrite $0 "If Err.Number <> 0 Then$\r$\n"
-    FileWrite $0 "    MsgBox $\"miniFShop Studio failed to start.$\" & vbCrLf & vbCrLf & Err.Description & vbCrLf & vbCrLf & $\"See log: $\" & logFile, 16, $\"miniFShop Studio$\"$\r$\n"
+    FileWrite $0 "    MsgBox $\"Pocket Shop Studio failed to start.$\" & vbCrLf & vbCrLf & Err.Description & vbCrLf & vbCrLf & $\"See log: $\" & logFile, 16, $\"Pocket Shop Studio$\"$\r$\n"
     FileWrite $0 "End If$\r$\n"
     FileClose $0
 
@@ -112,7 +112,7 @@ Section "Install"
         "$INSTDIR\Uninstall.exe"
 
     MessageBox MB_OK|MB_ICONINFORMATION \
-        "${APP_NAME} installed!$\r$\n$\r$\nDouble-click the desktop shortcut to launch.$\r$\nYour browser will open at http://localhost:3456$\r$\n$\r$\nGenerated shop files go to:$\r$\nDocuments\miniFShop\dist"
+        "${APP_NAME} installed!$\r$\n$\r$\nDouble-click the desktop shortcut to launch.$\r$\nYour browser will open at http://localhost:3456$\r$\n$\r$\nGenerated shop files go to:$\r$\nDocuments\PocketShop\dist"
 
 SectionEnd
 

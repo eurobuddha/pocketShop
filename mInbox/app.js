@@ -1,4 +1,4 @@
-// mInbox - Vendor Inbox for miniFShop Orders
+// mInbox - Vendor Inbox for Pocket Shop Orders
 // Follows miniMerch ChainMail protocol
 
 let myPublicKey = VENDOR_CONFIG ? VENDOR_CONFIG.vendorPublicKey : null;
@@ -438,7 +438,7 @@ document.getElementById('export-csv-btn').onclick = function() {
 
     const filterSuffix = currentStatusFilter !== 'ALL' ? '_' + currentStatusFilter.toLowerCase() : '';
     const date         = new Date().toISOString().split('T')[0];
-    const filename     = `minifshop_orders_${date}${filterSuffix}.csv`;
+    const filename     = `pocketshop_orders_${date}${filterSuffix}.csv`;
     downloadFile(exportToCSV(rows), filename, 'text/csv;charset=utf-8;');
 };
 
@@ -564,7 +564,7 @@ function processOrderCoin(coin) {
                 const order = {
                     ref: decrypted.ref || 'ORDER-' + Date.now(),
                     type: decrypted.type,
-                    product: decrypted.product || 'miniFShop',
+                    product: decrypted.product || 'Pocket Shop',
                     amount: decrypted.amount || '1',
                     currency: decrypted.currency || 'Minima',
                     email: decrypted.email || '',

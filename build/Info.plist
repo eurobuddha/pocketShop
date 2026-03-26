@@ -3,11 +3,11 @@
 <plist version="1.0">
 <dict>
     <key>CFBundleName</key>
-    <string>miniFShop Studio</string>
+    <string>Pocket Shop Studio</string>
     <key>CFBundleDisplayName</key>
-    <string>miniFShop Studio</string>
+    <string>Pocket Shop Studio</string>
     <key>CFBundleIdentifier</key>
-    <string>com.minifshop.studio</string>
+    <string>com.pocketshop.studio</string>
     <key>CFBundleVersion</key>
     <string>1.0.0</string>
     <key>CFBundleShortVersionString</key>
@@ -19,11 +19,11 @@
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleSignature</key>
-    <string>MFSS</string>
+    <string>PKSS</string>
     <key>NSHighResolutionCapable</key>
     <true/>
     <key>NSHumanReadableCopyright</key>
-    <string>Copyright © 2026 miniFShop. MIT License.</string>
+    <string>Copyright © 2026 Pocket Shop. MIT License.</string>
     <key>LSMinimumSystemVersion</key>
     <string>11.0</string>
     <key>NSAppTransportSecurity</key>
