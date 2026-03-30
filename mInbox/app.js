@@ -34,6 +34,19 @@ function escapeHtml(text) {
     return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
+function showToast(message, type) {
+    const container = document.getElementById('toast-container');
+    if (!container) return;
+    const toast = document.createElement('div');
+    toast.className = 'toast' + (type ? ' ' + type : '');
+    toast.textContent = message;
+    container.appendChild(toast);
+    setTimeout(() => {
+        toast.classList.add('fade-out');
+        toast.addEventListener('animationend', () => toast.remove());
+    }, 2500);
+}
+
 function formatDate(timestamp) {
     if (!timestamp) return '-';
     // DB returns BIGINT as string, need to parse
@@ -77,7 +90,7 @@ function initDatabase(callback) {
             "CREATE TABLE IF NOT EXISTS orders (" +
             "id INTEGER PRIMARY KEY AUTO_INCREMENT," +
             "ref TEXT, type TEXT, product TEXT, amount TEXT, currency TEXT," +
-            "email TEXT, shipping TEXT, message TEXT, timestamp BIGINT," +
+            "shipping TEXT, message TEXT, timestamp BIGINT," +
             "coinid TEXT UNIQUE, isread INTEGER DEFAULT 0, buyerPublicKey TEXT," +
             "status TEXT DEFAULT 'PAID')",
             function(response) {
@@ -116,14 +129,13 @@ function saveOrderToDb(order, callback) {
             
             // Insert new order
             MDS.sql(
-                "INSERT INTO orders (ref, type, product, amount, currency, email, shipping, message, timestamp, coinid, isread, buyerPublicKey, status) " +
+                "INSERT INTO orders (ref, type, product, amount, currency, shipping, message, timestamp, coinid, isread, buyerPublicKey, status) " +
                 "VALUES (" +
                 escapeSQL(order.ref || '') + ", " +
                 escapeSQL(order.type || 'ORDER') + ", " +
                 escapeSQL(order.product || '') + ", " +
                 escapeSQL(order.amount || '') + ", " +
                 escapeSQL(order.currency || '') + ", " +
-                escapeSQL(order.email || '') + ", " +
                 escapeSQL(order.shipping || '') + ", " +
                 escapeSQL(order.message || '') + ", " +
                 (order.timestamp || Date.now()) + ", " +
@@ -154,12 +166,14 @@ function updateOrderStatus(coinid, status) {
     MDS.sql("UPDATE orders SET status = " + escapeSQL(status) + " WHERE coinid = " + escapeSQL(coinid), function(response) {
         if (response && response.status) {
             console.log('Order status updated to:', status);
+            showToast('Status updated to ' + status, 'success');
             loadOrders();
-            // Update the modal if open
             if (selectedOrder && selectedOrder.coinid === coinid) {
                 selectedOrder.status = status;
                 updateStatusDisplay(status);
             }
+        } else {
+            showToast('Failed to update status', 'error');
         }
     });
 }
@@ -198,7 +212,7 @@ function renderOrders() {
     if (filtered.length === 0) {
         list.innerHTML = `
             <div class="empty-inbox">
-                <div class="empty-icon">📭</div>
+                <div class="empty-icon"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg></div>
                 <p>No orders yet</p>
                 <p class="empty-hint">Orders from your shop will appear here</p>
             </div>`;
@@ -209,8 +223,10 @@ function renderOrders() {
     filtered.forEach((order, idx) => {
         const statusClass = (order.status || 'PAID').toLowerCase();
         const isInquiry = order.type === 'INQUIRY';
-        const icon = isInquiry ? '💬' : '📦';
-        const metaRight = isInquiry ? 'Question' : escapeHtml(order.email || 'No email');
+        const icon = isInquiry
+            ? '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1976d2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>'
+            : '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4A7C23" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16.5 9.4l-9-5.19M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>';
+        const metaRight = isInquiry ? 'Question' : (order.shipping === 'DIGITAL' ? 'Digital' : 'Physical');
         html += `
         <div class="order-item ${order.read ? '' : 'unread'}" data-idx="${idx}">
             <div class="order-icon">${icon}</div>
@@ -221,7 +237,7 @@ function renderOrders() {
                 </div>
                 <div class="order-meta">
                     <span class="order-amount">${isInquiry ? 'Message' : escapeHtml(order.amount) + ' ' + escapeHtml(order.currency)}</span>
-                    <span class="order-email">${metaRight}</span>
+                    <span class="order-delivery">${metaRight}</span>
                 </div>
                 <div class="order-time">${formatDate(order.timestamp)}</div>
             </div>
@@ -251,8 +267,8 @@ function openOrderModal(order) {
     
     let infoHtml = `
         <div class="info-row"><span class="label">Amount:</span><span class="value">${escapeHtml(order.amount)} ${escapeHtml(order.currency)}</span></div>
-        <div class="info-row"><span class="label">Email:</span><span class="value">${escapeHtml(order.email || 'Not provided')}</span></div>
-        <div class="info-row"><span class="label">Shipping:</span><span class="value shipping-address">${escapeHtml(order.shipping || 'Not provided')}</span></div>
+        <div class="info-row"><span class="label">Delivery:</span><span class="value">${order.shipping === 'DIGITAL' ? 'Digital — via ChainMail' : 'Physical'}</span></div>
+        ${order.shipping && order.shipping !== 'DIGITAL' ? `<div class="info-row"><span class="label">Shipping:</span><span class="value shipping-address">${escapeHtml(order.shipping)}</span></div>` : ''}
         ${order.message ? `<div class="info-row"><span class="label">Message:</span><span class="value">${escapeHtml(order.message)}</span></div>` : ''}
         <div class="info-row"><span class="label">Time:</span><span class="value">${formatDate(order.timestamp)}</span></div>
         ${order.buyerPublicKey ? `<div class="info-row buyer-mx-row"><span class="label">Buyer MX:</span><span class="value pubkey-copy" id="buyer-pubkey" title="Click to copy">${escapeHtml(order.buyerPublicKey)}</span></div>` : ''}`;
@@ -264,10 +280,7 @@ function openOrderModal(order) {
     if (buyerPubkeyEl) {
         buyerPubkeyEl.onclick = function() {
             navigator.clipboard.writeText(order.buyerPublicKey);
-            this.textContent = '✓ Copied!';
-            setTimeout(() => {
-                this.textContent = order.buyerPublicKey;
-            }, 1500);
+            showToast('Buyer MX key copied', 'success');
         };
     }
     
@@ -300,16 +313,14 @@ document.getElementById('modal-close').onclick = function() {
 document.getElementById('copy-address-btn').onclick = function() {
     if (selectedOrder && selectedOrder.shipping) {
         navigator.clipboard.writeText(selectedOrder.shipping);
-        this.textContent = '✓ Copied!';
-        setTimeout(() => this.textContent = '📋 Copy Address', 2000);
+        showToast('Address copied', 'success');
     }
 };
 
 document.getElementById('copy-txid-btn').onclick = function() {
     if (selectedOrder && selectedOrder.coinid) {
         navigator.clipboard.writeText(selectedOrder.coinid);
-        this.textContent = '✓ Copied!';
-        setTimeout(() => this.textContent = 'Copy', 2000);
+        showToast('TX ID copied', 'success');
     }
 };
 
@@ -335,33 +346,25 @@ document.getElementById('open-chainmail-btn').onclick = function() {
     btn.disabled = true;
     btn.textContent = 'Copying...';
     
-    // Copy buyer's MX pubkey to clipboard first
     navigator.clipboard.writeText(selectedOrder.buyerPublicKey).then(function() {
         console.log('Buyer MX pubkey copied to clipboard:', selectedOrder.buyerPublicKey);
-        btn.textContent = 'Opening...';
-        
+
         MDS.dapplink("chainmail", function(linkdata) {
             if (linkdata.status) {
-                // Open ChainMail - buyer pubkey is already in clipboard
                 const url = linkdata.base;
                 console.log('Opening ChainMail:', url);
                 window.open(url, '_blank');
-                btn.textContent = '✓ Copied & Opened';
-                setTimeout(() => {
-                    btn.textContent = '💬 Open ChainMail';
-                    btn.disabled = false;
-                }, 2000);
+                showToast('Buyer key copied, ChainMail opened', 'success');
+                btn.disabled = false;
             } else {
-                alert('ChainMail minidapp not found. Please install ChainMail.\n\nBuyer address copied to clipboard.');
+                showToast('ChainMail not found — key copied to clipboard', 'error');
                 console.log('ChainMail dapplink error:', linkdata.error);
-                btn.textContent = '💬 Open ChainMail';
                 btn.disabled = false;
             }
         });
     }).catch(function(err) {
         console.error('Failed to copy to clipboard:', err);
-        alert('Failed to copy buyer address to clipboard');
-        btn.textContent = '💬 Open ChainMail';
+        showToast('Failed to copy buyer key', 'error');
         btn.disabled = false;
     });
 };
@@ -395,7 +398,7 @@ function csvEscape(val) {
 function exportToCSV(rows) {
     const headers = [
         'Reference', 'Product', 'Amount', 'Currency',
-        'Email', 'Shipping Address', 'Message',
+        'Shipping Address', 'Message',
         'Status', 'Date', 'Time',
         'TX ID', 'Buyer MX Key', 'Read'
     ];
@@ -406,7 +409,7 @@ function exportToCSV(rows) {
         const time = ts && !isNaN(ts) ? ts.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
         return [
             o.ref, o.product, o.amount, o.currency,
-            o.email, o.shipping, o.message,
+            o.shipping, o.message,
             o.status || 'PAID', date, time,
             o.coinid, o.buyerPublicKey || '', o.read ? 'yes' : 'no'
         ].map(csvEscape).join(',');
@@ -443,12 +446,20 @@ document.getElementById('export-csv-btn').onclick = function() {
     const date         = new Date().toISOString().split('T')[0];
     const filename     = `pocketshop_orders_${date}${filterSuffix}.csv`;
     downloadFile(exportToCSV(rows), filename, 'text/csv;charset=utf-8;');
+    showToast('Exported ' + rows.length + ' orders', 'success');
 };
 
 document.getElementById('refresh-btn').onclick = function() {
+    const btn = this;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="btn-spinner"></span> Scanning...';
     console.log('Refresh clicked - scanning for orders...');
-    scanForOrders();
-    loadOrders();
+    scanForOrders(function() {
+        loadOrders();
+        btn.disabled = false;
+        btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> Refresh';
+        showToast('Inbox refreshed', 'success');
+    });
 };
 
 function loadOrders() {
@@ -461,7 +472,6 @@ function loadOrders() {
                 product: row.PRODUCT,
                 amount: row.AMOUNT,
                 currency: row.CURRENCY,
-                email: row.EMAIL,
                 shipping: row.SHIPPING,
                 message: row.MESSAGE,
                 timestamp: row.TIMESTAMP,
@@ -601,7 +611,6 @@ function processOrderCoin(coin) {
                     product: decrypted.product || 'Pocket Shop',
                     amount: decrypted.amount || '1',
                     currency: decrypted.currency || 'Minima',
-                    email: decrypted.email || '',
                     shipping: decrypted.shipping || '',
                     message: decrypted.message || '',
                     timestamp: decrypted.timestamp || Date.now(),
@@ -629,7 +638,6 @@ function processOrderCoin(coin) {
                     product: decrypted.product || '',
                     amount: '0.0001',
                     currency: 'MINI',
-                    email: '',
                     shipping: '',
                     message: decrypted.message || '',
                     timestamp: decrypted.timestamp || Date.now(),
@@ -646,37 +654,42 @@ function processOrderCoin(coin) {
     });
 }
 
-function scanForOrders() {
+function scanForOrders(onComplete) {
     console.log('Scanning for orders at VENDOR_ADDRESS:', VENDOR_ADDRESS);
     MDS.cmd('coins address:' + VENDOR_ADDRESS, function(response) {
         console.log('Coins response:', response);
         if (!response) {
             console.log('No response from coins command');
+            if (onComplete) onComplete();
             return;
         }
         if (!response.status) {
             console.log('Coins command failed:', response.error || response);
+            if (onComplete) onComplete();
             return;
         }
         if (!response.response) {
             console.log('No response data');
+            if (onComplete) onComplete();
             return;
         }
-        
+
         let coins = response.response;
         if (typeof coins === 'string') {
-            try { coins = JSON.parse(coins); } catch (e) { return; }
+            try { coins = JSON.parse(coins); } catch (e) { if (onComplete) onComplete(); return; }
         }
         if (!Array.isArray(coins)) {
             console.log('Coins is not an array:', typeof coins);
+            if (onComplete) onComplete();
             return;
         }
-        
+
         console.log('Found', coins.length, 'coins at VENDOR_ADDRESS');
-        
+
         coins.forEach(function(coin) {
             processOrderCoin(coin);
         });
+        if (onComplete) onComplete();
     });
 }
 
