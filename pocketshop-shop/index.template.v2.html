@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{SHOP_NAME}}</title>
+    <link rel="icon" href="icon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="style.css">
+    <script src="../../miniweb/libs/mds.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>{{SHOP_NAME}}</h1>
+        </header>
+
+        <main>
+            <div id="product-grid"></div>
+
+            <div id="cart-bar" class="cart-bar hidden">
+                <div class="cart-info">
+                    <span id="cart-count">0 items</span>
+                    <span id="cart-total">0</span>
+                </div>
+                <button id="checkout-btn" class="buy-btn">Checkout</button>
+            </div>
+
+            <button id="chainmail-btn" class="chainmail-btn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                ChainMail the Vendor
+            </button>
+        </main>
+
+        <footer>
+            <p>Powered by Minima</p>
+        </footer>
+    </div>
+
+    <!-- Checkout Modal -->
+    <div id="modal" class="modal hidden">
+        <div class="modal-content">
+            <button class="close" id="modal-close">&times;</button>
+            <h2>Checkout</h2>
+
+            <div id="line-items" class="line-items"></div>
+
+            <div class="summary">
+                <p><strong>Total: <span id="order-total">0</span> <span class="currency-label"></span></strong></p>
+                <p class="hint">Payment TX ID will serve as your order confirmation</p>
+            </div>
+
+            <div class="form-group">
+                <label>Delivery Type</label>
+                <div class="delivery-toggle">
+                    <button class="delivery-option active" data-type="physical">Physical</button>
+                    <button class="delivery-option" data-type="digital">Digital</button>
+                </div>
+            </div>
+
+            <div id="chainmail-note" class="chainmail-note hidden">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                <span>Correspondence will come via ChainMail.</span>
+            </div>
+
+            <div id="address-group" class="form-group">
+                <label>Shipping Address</label>
+                <textarea id="address" placeholder="Where should we send your order?" rows="3"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label>Message (optional)</label>
+                <textarea id="message" placeholder="Any special instructions?" rows="2"></textarea>
+            </div>
+
+            <button id="pay-btn" class="pay-btn">Pay <span id="pay-amount">0</span> <span class="currency-label"></span></button>
+
+            <div id="status" class="status hidden"></div>
+        </div>
+    </div>
+
+    <!-- Order Tracker Modal -->
+    <div id="confirm" class="modal hidden">
+        <div class="modal-content">
+            <h2>Your Order</h2>
+
+            <div class="order-tracker">
+                <div class="tracker-step" id="step-pending" data-step="pending">
+                    <div class="step-marker">
+                        <svg class="step-icon icon-pending" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                        <svg class="step-icon icon-done" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    </div>
+                    <div class="step-body">
+                        <p class="step-title">Pending Approval</p>
+                        <p class="step-desc">Approve this transaction in Pending</p>
+                    </div>
+                </div>
+
+                <div class="tracker-step" id="step-confirming" data-step="confirming">
+                    <div class="step-marker">
+                        <svg class="step-icon icon-pending" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+                        <svg class="step-icon icon-done" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    </div>
+                    <div class="step-body">
+                        <p class="step-title">Confirming</p>
+                        <p class="step-desc">Transaction is being confirmed on-chain</p>
+                    </div>
+                </div>
+
+                <div class="tracker-step" id="step-confirmed" data-step="confirmed">
+                    <div class="step-marker">
+                        <svg class="step-icon icon-pending" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                        <svg class="step-icon icon-done" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    </div>
+                    <div class="step-body">
+                        <p class="step-title">Order Confirmed</p>
+                        <p class="step-desc">Vendor has received your order. Updates via ChainMail.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tx-info">
+                <p><strong>TX ID:</strong></p>
+                <p id="tx-id" class="tx-id"></p>
+                <button id="copy-tx" class="copy-btn">Copy</button>
+            </div>
+            <p class="hint">Keep this TX ID for your records.</p>
+            <button id="close-confirm" class="buy-btn">Done</button>
+        </div>
+    </div>
+
+    <!-- ChainMail Inquiry Modal -->
+    <div id="inquiry-modal" class="modal hidden">
+        <div class="modal-content">
+            <button class="close" id="inquiry-close">&times;</button>
+            <h2>Message the Vendor</h2>
+
+            <div id="inquiry-form">
+                <div class="form-group">
+                    <label>Your Question</label>
+                    <textarea id="inquiry-message" placeholder="Ask the vendor anything..." rows="4"></textarea>
+                </div>
+
+                <button id="send-inquiry-btn" class="pay-btn">Send Message</button>
+                <div id="inquiry-status" class="status hidden"></div>
+            </div>
+
+            <div id="inquiry-sent" class="inquiry-sent" style="display:none;">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13"/><path d="M22 2L15 22L11 13L2 9L22 2Z"/></svg>
+                <p>Your message has been sent to the vendor via ChainMail. They will reply on-chain.</p>
+                <button id="inquiry-done-btn" class="buy-btn" style="margin-top:16px;">Done</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="config.js"></script>
+    <script src="products.js"></script>
+    <script>
+        // ─── State ───
+        let vendorPublicKey = null;
+        let buyerMxPublicKey = null;
+        let deliveryType = 'physical';
+        let orderState = null;
+        const cart = {};
+        const isSingleProduct = PRODUCTS.length === 1;
+
+        // ─── Helpers ───
+        function textToHex(text) {
+            let hex = '';
+            for (let i = 0; i < text.length; i++) {
+                hex += text.charCodeAt(i).toString(16).padStart(2, '0');
+            }
+            return hex;
+        }
+
+        function fmt(n) {
+            return Number(n) % 1 === 0 ? String(Number(n)) : Number(n).toFixed(2);
+        }
+
+        function encryptMessage(publicKey, data) {
+            return new Promise(function(resolve, reject) {
+                var jsonStr = JSON.stringify(data);
+                var hexData = textToHex(jsonStr);
+                MDS.cmd('maxmessage action:encrypt publickey:' + publicKey + ' data:' + hexData, function(resp) {
+                    if (!resp || !resp.status) {
+                        reject(new Error('Encryption failed: ' + (resp?.error || 'No response')));
+                        return;
+                    }
+                    var message = resp.response?.message || {};
+                    var encrypted = resp.response?.data || message.data;
+                    if (!encrypted) {
+                        reject(new Error('Encryption failed: no encrypted data'));
+                        return;
+                    }
+                    resolve({ encrypted: encrypted, senderPublicKey: message.mxpublickey || resp.response?.mxpublickey || null });
+                });
+            });
+        }
+
+        function getMyMxPublicKey() {
+            return new Promise(function(resolve) {
+                MDS.cmd('maxima action:info', function(response) {
+                    if (response.status && response.response) {
+                        resolve(response.response.mxpublickey || response.response.publickey);
+                        return;
+                    }
+                    resolve(null);
+                });
+            });
+        }
+
+        // ─── Render Products ───
+        function renderProducts() {
+            var grid = document.getElementById('product-grid');
+            grid.innerHTML = '';
+            if (!isSingleProduct) grid.classList.add('multi');
+
+            PRODUCTS.forEach(function(p) {
+                var card = document.createElement('div');
+                card.className = 'product-card';
+                card.innerHTML =
+                    '<img src="' + p.image + '" alt="' + p.name + '" class="product-image">' +
+                    '<h2>' + p.name + '</h2>' +
+                    '<p class="description">' + (p.description || '') + '</p>' +
+                    '<p class="price">' + fmt(p.price) + ' ' + CURRENCY.label + '</p>' +
+                    (isSingleProduct ?
+                        '<div class="quantity-selector">' +
+                            '<button class="qty-btn" data-id="' + p.id + '" data-dir="-1">&minus;</button>' +
+                            '<span class="qty-value" id="qty-' + p.id + '">1</span>' +
+                            '<button class="qty-btn" data-id="' + p.id + '" data-dir="1">+</button>' +
+                        '</div>' +
+                        '<p class="total-price">Total: <span id="total-' + p.id + '">' + fmt(p.price) + '</span> ' + CURRENCY.label + '</p>' +
+                        '<button class="buy-btn" data-action="buy" data-id="' + p.id + '">Buy Now</button>'
+                    :
+                        '<div class="quantity-selector">' +
+                            '<button class="qty-btn" data-id="' + p.id + '" data-dir="-1">&minus;</button>' +
+                            '<span class="qty-value" id="qty-' + p.id + '">0</span>' +
+                            '<button class="qty-btn" data-id="' + p.id + '" data-dir="1">+</button>' +
+                        '</div>'
+                    );
+                grid.appendChild(card);
+
+                // Init cart
+                if (isSingleProduct) {
+                    cart[p.id] = 1;
+                } else {
+                    cart[p.id] = 0;
+                }
+            });
+
+            // Set currency labels
+            document.querySelectorAll('.currency-label').forEach(function(el) {
+                el.textContent = CURRENCY.label;
+            });
+        }
+
+        // ─── Cart ───
+        function getCartTotal() {
+            var total = 0;
+            Object.keys(cart).forEach(function(id) {
+                if (cart[id] > 0) {
+                    var p = PRODUCTS.find(function(pr) { return pr.id === id; });
+                    total += cart[id] * p.price;
+                }
+            });
+            return total;
+        }
+
+        function getCartCount() {
+            var count = 0;
+            Object.keys(cart).forEach(function(id) { count += cart[id]; });
+            return count;
+        }
+
+        function getCartItems() {
+            var items = [];
+            Object.keys(cart).forEach(function(id) {
+                if (cart[id] > 0) {
+                    var p = PRODUCTS.find(function(pr) { return pr.id === id; });
+                    items.push({ id: p.id, name: p.name, qty: cart[id], unitPrice: p.price, subtotal: cart[id] * p.price });
+                }
+            });
+            return items;
+        }
+
+        function updateCartUI() {
+            var count = getCartCount();
+            var total = getCartTotal();
+
+            if (isSingleProduct) {
+                var p = PRODUCTS[0];
+                var el = document.getElementById('total-' + p.id);
+                if (el) el.textContent = fmt(total);
+            } else {
+                var bar = document.getElementById('cart-bar');
+                if (count > 0) {
+                    bar.classList.remove('hidden');
+                    document.getElementById('cart-count').textContent = count + (count === 1 ? ' item' : ' items');
+                    document.getElementById('cart-total').textContent = fmt(total) + ' ' + CURRENCY.label;
+                } else {
+                    bar.classList.add('hidden');
+                }
+            }
+
+            // Update qty displays
+            PRODUCTS.forEach(function(p) {
+                var qel = document.getElementById('qty-' + p.id);
+                if (qel) qel.textContent = cart[p.id];
+            });
+        }
+
+        // ─── Event Delegation ───
+        document.getElementById('product-grid').addEventListener('click', function(e) {
+            var btn = e.target.closest('[data-dir]');
+            if (btn) {
+                var id = btn.getAttribute('data-id');
+                var dir = parseInt(btn.getAttribute('data-dir'));
+                var p = PRODUCTS.find(function(pr) { return pr.id === id; });
+                var newQty = cart[id] + dir;
+                if (newQty < (isSingleProduct ? 1 : 0)) newQty = isSingleProduct ? 1 : 0;
+                if (newQty > p.maxUnits) newQty = p.maxUnits;
+                cart[id] = newQty;
+                updateCartUI();
+                return;
+            }
+
+            var buyBtn = e.target.closest('[data-action="buy"]');
+            if (buyBtn) {
+                openCheckout();
+            }
+        });
+
+        // ─── Checkout ───
+        function openCheckout() {
+            if (typeof MDS === 'undefined') {
+                alert('MDS not loaded. Please access this shop through MiniWEB.');
+                return;
+            }
+            var items = getCartItems();
+            if (items.length === 0) return;
+
+            var total = getCartTotal();
+            var lineItemsEl = document.getElementById('line-items');
+            lineItemsEl.innerHTML = '';
+
+            items.forEach(function(item) {
+                var row = document.createElement('div');
+                row.className = 'line-item';
+                row.innerHTML = '<span class="line-name">' + item.name + '</span>' +
+                    '<span class="line-qty">' + item.qty + ' &times; ' + fmt(item.unitPrice) + '</span>' +
+                    '<span class="line-subtotal">' + fmt(item.subtotal) + '</span>';
+                lineItemsEl.appendChild(row);
+            });
+
+            document.getElementById('order-total').textContent = fmt(total);
+            document.getElementById('pay-amount').textContent = fmt(total);
+            document.getElementById('modal').classList.remove('hidden');
+            showStatus('', 'hidden');
+        }
+
+        if (!isSingleProduct) {
+            document.getElementById('checkout-btn').onclick = openCheckout;
+        }
+
+        document.getElementById('modal-close').onclick = function() {
+            document.getElementById('modal').classList.add('hidden');
+        };
+
+        // ─── Delivery Toggle ───
+        document.querySelectorAll('.delivery-option').forEach(function(btn) {
+            btn.onclick = function() {
+                document.querySelectorAll('.delivery-option').forEach(function(b) { b.classList.remove('active'); });
+                btn.classList.add('active');
+                deliveryType = btn.getAttribute('data-type');
+                if (deliveryType === 'digital') {
+                    document.getElementById('address-group').style.display = 'none';
+                    document.getElementById('chainmail-note').classList.remove('hidden');
+                } else {
+                    document.getElementById('address-group').style.display = '';
+                    document.getElementById('chainmail-note').classList.add('hidden');
+                }
+            };
+        });
+
+        // ─── Pay ───
+        document.getElementById('pay-btn').onclick = async function() {
+            var address = document.getElementById('address').value.trim();
+            var message = document.getElementById('message').value.trim();
+
+            if (deliveryType === 'physical' && !address) {
+                showStatus('Please fill in a shipping address', 'error');
+                return;
+            }
+            if (!vendorPublicKey) {
+                showStatus('Shop not configured - missing vendor public key', 'error');
+                return;
+            }
+            if (!buyerMxPublicKey) {
+                showStatus('Getting buyer info...', 'pending');
+                buyerMxPublicKey = await getMyMxPublicKey();
+                if (!buyerMxPublicKey) {
+                    showStatus('Error: Could not get buyer MX public key', 'error');
+                    return;
+                }
+            }
+
+            var items = getCartItems();
+            var totalPrice = fmt(getCartTotal());
+            var totalQty = getCartCount();
+            var productSummary = items.map(function(i) { return i.name; }).join(', ');
+            var shopName = document.title;
+
+            var orderData = {
+                type: "ORDER",
+                version: 2,
+                items: items,
+                product: productSummary,
+                amount: totalQty.toString(),
+                totalPrice: totalPrice,
+                currency: CURRENCY.label,
+                deliveryType: deliveryType,
+                shipping: deliveryType === 'physical' ? address : 'DIGITAL',
+                message: message,
+                buyerMxKey: buyerMxPublicKey,
+                timestamp: Date.now(),
+                ref: shopName.toUpperCase().replace(/[^A-Z0-9]/g, '').substring(0, 8) + "-" + Date.now()
+            };
+
+            showStatus('Encrypting order...', 'pending');
+
+            try {
+                var encryptResult = await encryptMessage(vendorPublicKey, orderData);
+                if (!encryptResult || !encryptResult.encrypted) {
+                    showStatus('Encryption failed - no encrypted data', 'error');
+                    return;
+                }
+
+                showStatus('Sending order with payment...', 'pending');
+
+                var state = {};
+                state[99] = encryptResult.encrypted;
+                var cmd = "send address:" + VENDOR_CONFIG.vendorAddress + " amount:" + totalPrice + " tokenid:" + CURRENCY.tokenId + " state:" + JSON.stringify(state);
+
+                MDS.cmd(cmd, function(res) {
+                    if (!res) { showStatus('Transaction failed: no response', 'error'); return; }
+
+                    if (res.pending) {
+                        document.getElementById('tx-id').textContent = 'Awaiting approval';
+                        document.getElementById('modal').classList.add('hidden');
+                        document.getElementById('confirm').classList.remove('hidden');
+                        showStatus('', 'hidden');
+                        setOrderState('pending');
+                        MDS.keypair.set('pendingOrder', JSON.stringify({ state: 'pending', txid: '', timestamp: Date.now() }), function() {});
+                        return;
+                    }
+
+                    if (res.error) { showStatus('Error: ' + res.error, 'error'); return; }
+
+                    var txid = (res.response && res.response.txndetail) ? (res.response.txndetail.txid || res.response.txid || '') : '';
+                    document.getElementById('tx-id').textContent = txid || 'Processing...';
+                    document.getElementById('modal').classList.add('hidden');
+                    document.getElementById('confirm').classList.remove('hidden');
+                    showStatus('', 'hidden');
+                    setOrderState('confirming');
+                    MDS.keypair.set('pendingOrder', JSON.stringify({ state: 'confirming', txid: txid, timestamp: Date.now() }), function() {});
+                });
+            } catch (e) {
+                showStatus('Encryption error: ' + e.message, 'error');
+            }
+        };
+
+        // ─── Order Tracker ───
+        var STEPS = ['pending', 'confirming', 'confirmed'];
+
+        function setOrderState(state) {
+            orderState = state;
+            STEPS.forEach(function(step, i) {
+                var el = document.getElementById('step-' + step);
+                var currentIdx = STEPS.indexOf(state);
+                el.classList.remove('active', 'complete');
+                if (i < currentIdx) el.classList.add('complete');
+                else if (i === currentIdx) el.classList.add('active');
+            });
+        }
+
+        function clearPendingOrder() {
+            orderState = null;
+            MDS.keypair.set('pendingOrder', '', function() {});
+        }
+
+        function restorePendingOrder() {
+            MDS.keypair.get('pendingOrder', function(res) {
+                if (!res.status || !res.value) return;
+                try {
+                    var order = JSON.parse(res.value);
+                    if (Date.now() - order.timestamp > 3600000) { clearPendingOrder(); return; }
+                    if (order.state === 'confirmed') { clearPendingOrder(); return; }
+                    document.getElementById('tx-id').textContent = order.txid || 'Awaiting approval';
+                    document.getElementById('confirm').classList.remove('hidden');
+                    setOrderState(order.state);
+                } catch (e) { clearPendingOrder(); }
+            });
+        }
+
+        document.getElementById('copy-tx').onclick = function() {
+            var txid = document.getElementById('tx-id').textContent;
+            if (txid && txid !== 'Awaiting approval') {
+                navigator.clipboard.writeText(txid);
+                document.getElementById('copy-tx').textContent = 'Copied!';
+            }
+        };
+
+        document.getElementById('close-confirm').onclick = function() {
+            document.getElementById('confirm').classList.add('hidden');
+            if (orderState === 'confirmed') clearPendingOrder();
+            // Reset cart
+            PRODUCTS.forEach(function(p) { cart[p.id] = isSingleProduct ? 1 : 0; });
+            updateCartUI();
+            document.getElementById('address').value = '';
+            document.getElementById('message').value = '';
+            deliveryType = 'physical';
+            document.querySelectorAll('.delivery-option').forEach(function(b) { b.classList.remove('active'); });
+            document.querySelector('.delivery-option[data-type="physical"]').classList.add('active');
+            document.getElementById('address-group').style.display = '';
+            document.getElementById('chainmail-note').classList.add('hidden');
+        };
+
+        // ─── ChainMail Inquiry ───
+        document.getElementById('chainmail-btn').onclick = function() {
+            if (typeof MDS === 'undefined') { alert('MDS not loaded.'); return; }
+            document.getElementById('inquiry-form').style.display = '';
+            document.getElementById('inquiry-sent').style.display = 'none';
+            document.getElementById('inquiry-message').value = '';
+            showInquiryStatus('', 'hidden');
+            document.getElementById('inquiry-modal').classList.remove('hidden');
+        };
+
+        document.getElementById('inquiry-close').onclick = function() {
+            document.getElementById('inquiry-modal').classList.add('hidden');
+        };
+
+        document.getElementById('send-inquiry-btn').onclick = async function() {
+            var btn = document.getElementById('send-inquiry-btn');
+            var msg = document.getElementById('inquiry-message').value.trim();
+            if (!msg) { showInquiryStatus('Please write a message', 'error'); return; }
+            if (!vendorPublicKey) { showInquiryStatus('Shop not configured', 'error'); return; }
+
+            btn.disabled = true;
+
+            if (!buyerMxPublicKey) {
+                showInquiryStatus('Getting your info...', 'pending');
+                buyerMxPublicKey = await getMyMxPublicKey();
+                if (!buyerMxPublicKey) { showInquiryStatus('Error: Could not get your MX key', 'error'); btn.disabled = false; return; }
+            }
+
+            showInquiryStatus('Encrypting message...', 'pending');
+
+            var inquiryData = {
+                type: "INQUIRY",
+                product: PRODUCTS.map(function(p) { return p.name; }).join(', '),
+                message: msg,
+                buyerMxKey: buyerMxPublicKey,
+                timestamp: Date.now(),
+                ref: "INQ-" + Date.now()
+            };
+
+            try {
+                var encryptResult = await encryptMessage(vendorPublicKey, inquiryData);
+                if (!encryptResult || !encryptResult.encrypted) { showInquiryStatus('Encryption failed', 'error'); btn.disabled = false; return; }
+
+                showInquiryStatus('Sending message...', 'pending');
+
+                var state = {};
+                state[99] = encryptResult.encrypted;
+                var cmd = "send address:" + VENDOR_CONFIG.vendorAddress + " amount:0.0001 tokenid:0x00 state:" + JSON.stringify(state);
+                MDS.cmd(cmd, function(res) {
+                    if (res && (res.pending || (res.response && res.response.txndetail))) {
+                        document.getElementById('inquiry-form').style.display = 'none';
+                        document.getElementById('inquiry-sent').style.display = '';
+                    } else if (res && res.error) {
+                        showInquiryStatus('Error: ' + res.error, 'error');
+                        btn.disabled = false;
+                    } else {
+                        document.getElementById('inquiry-form').style.display = 'none';
+                        document.getElementById('inquiry-sent').style.display = '';
+                    }
+                });
+            } catch (e) {
+                showInquiryStatus('Error: ' + e.message, 'error');
+                btn.disabled = false;
+            }
+        };
+
+        document.getElementById('inquiry-done-btn').onclick = function() {
+            document.getElementById('inquiry-modal').classList.add('hidden');
+        };
+
+        // ─── Status Helpers ───
+        function showStatus(msg, type) {
+            var el = document.getElementById('status');
+            el.textContent = msg;
+            el.className = 'status ' + type;
+            if (type === 'hidden') el.classList.add('hidden');
+        }
+
+        function showInquiryStatus(msg, type) {
+            var el = document.getElementById('inquiry-status');
+            el.textContent = msg;
+            el.className = 'status ' + type;
+            if (type === 'hidden') el.classList.add('hidden');
+        }
+
+        // ─── MDS Init ───
+        MDS.init(function(msg) {
+            if (msg.event === 'inited') {
+                if (VENDOR_CONFIG && VENDOR_CONFIG.vendorPublicKey) {
+                    vendorPublicKey = VENDOR_CONFIG.vendorPublicKey;
+                }
+                renderProducts();
+                updateCartUI();
+                restorePendingOrder();
+            }
+            else if (msg.event === 'MDS_PENDING') {
+                if (orderState === 'pending') {
+                    setOrderState('confirming');
+                    MDS.keypair.set('pendingOrder', JSON.stringify({ state: 'confirming', txid: document.getElementById('tx-id').textContent, timestamp: Date.now() }), function() {});
+                }
+            }
+            else if (msg.event === 'NEWBALANCE') {
+                if (orderState === 'pending' || orderState === 'confirming') {
+                    setOrderState('confirmed');
+                    MDS.keypair.set('pendingOrder', JSON.stringify({ state: 'confirmed', txid: document.getElementById('tx-id').textContent, timestamp: Date.now() }), function() {});
+                }
+            }
+            else if (msg.event === 'NEWBLOCK') {
+                if (orderState === 'confirming') {
+                    setOrderState('confirmed');
+                    MDS.keypair.set('pendingOrder', JSON.stringify({ state: 'confirmed', txid: document.getElementById('tx-id').textContent, timestamp: Date.now() }), function() {});
+                }
+            }
+        });
+    </script>
+</body>
+</html>

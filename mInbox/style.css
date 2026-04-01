@@ -771,6 +771,43 @@ body {
     to { transform: rotate(360deg); }
 }
 
+/* ─── v2 line items in order modal ─── */
+.line-items-table {
+    margin-bottom: 10px;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.line-item-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    font-size: 13px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.line-item-row:last-child {
+    border-bottom: none;
+}
+
+.li-name {
+    flex: 1;
+    font-weight: 500;
+}
+
+.li-qty {
+    color: rgba(255,255,255,0.5);
+    margin: 0 12px;
+    font-size: 12px;
+}
+
+.li-sub {
+    font-weight: 600;
+    color: #4CAF50;
+}
+
 .footer {
     text-align: center;
     padding: 20px;

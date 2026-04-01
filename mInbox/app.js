@@ -92,7 +92,7 @@ function initDatabase(callback) {
             "ref TEXT, type TEXT, product TEXT, amount TEXT, currency TEXT," +
             "shipping TEXT, message TEXT, timestamp BIGINT," +
             "coinid TEXT UNIQUE, isread INTEGER DEFAULT 0, buyerPublicKey TEXT," +
-            "status TEXT DEFAULT 'PAID')",
+            "status TEXT DEFAULT 'PAID', items TEXT)",
             function(response) {
                 if (response && response.status) {
                     dbReady = true;
@@ -129,7 +129,7 @@ function saveOrderToDb(order, callback) {
             
             // Insert new order
             MDS.sql(
-                "INSERT INTO orders (ref, type, product, amount, currency, shipping, message, timestamp, coinid, isread, buyerPublicKey, status) " +
+                "INSERT INTO orders (ref, type, product, amount, currency, shipping, message, timestamp, coinid, isread, buyerPublicKey, status, items) " +
                 "VALUES (" +
                 escapeSQL(order.ref || '') + ", " +
                 escapeSQL(order.type || 'ORDER') + ", " +
@@ -141,7 +141,8 @@ function saveOrderToDb(order, callback) {
                 (order.timestamp || Date.now()) + ", " +
                 escapeSQL(order.coinid || '') + ", 0, " +
                 escapeSQL(order.buyerPublicKey || '') + ", " +
-                escapeSQL(order.status || 'PAID') + ")",
+                escapeSQL(order.status || 'PAID') + ", " +
+                escapeSQL(order.items || '') + ")",
                 function(response) {
                     console.log('INSERT response:', JSON.stringify(response));
                     if (response && response.status) {
@@ -265,8 +266,26 @@ function openOrderModal(order) {
     
     const currentStatus = order.status || 'PAID';
     
-    let infoHtml = `
-        <div class="info-row"><span class="label">Amount:</span><span class="value">${escapeHtml(order.amount)} ${escapeHtml(order.currency)}</span></div>
+    // Build line items if v2 order
+    var itemsHtml = '';
+    if (order.items) {
+        try {
+            var items = JSON.parse(order.items);
+            if (Array.isArray(items) && items.length > 0) {
+                itemsHtml = '<div class="line-items-table">';
+                items.forEach(function(item) {
+                    itemsHtml += '<div class="line-item-row">' +
+                        '<span class="li-name">' + escapeHtml(item.name) + '</span>' +
+                        '<span class="li-qty">' + item.qty + ' x ' + item.unitPrice + '</span>' +
+                        '<span class="li-sub">' + item.subtotal + '</span></div>';
+                });
+                itemsHtml += '</div>';
+            }
+        } catch (e) {}
+    }
+
+    let infoHtml = itemsHtml +
+        `<div class="info-row"><span class="label">${order.items ? 'Total:' : 'Amount:'}</span><span class="value">${escapeHtml(order.amount)} ${escapeHtml(order.currency)}</span></div>
         <div class="info-row"><span class="label">Delivery:</span><span class="value">${order.shipping === 'DIGITAL' ? 'Digital — via ChainMail' : 'Physical'}</span></div>
         ${order.shipping && order.shipping !== 'DIGITAL' ? `<div class="info-row"><span class="label">Shipping:</span><span class="value shipping-address">${escapeHtml(order.shipping)}</span></div>` : ''}
         ${order.message ? `<div class="info-row"><span class="label">Message:</span><span class="value">${escapeHtml(order.message)}</span></div>` : ''}
@@ -400,7 +419,7 @@ function exportToCSV(rows) {
         'Reference', 'Product', 'Amount', 'Currency',
         'Shipping Address', 'Message',
         'Status', 'Date', 'Time',
-        'TX ID', 'Buyer MX Key', 'Read'
+        'TX ID', 'Buyer MX Key', 'Read', 'Items (JSON)'
     ];
 
     const lines = rows.map(o => {
@@ -411,7 +430,8 @@ function exportToCSV(rows) {
             o.ref, o.product, o.amount, o.currency,
             o.shipping, o.message,
             o.status || 'PAID', date, time,
-            o.coinid, o.buyerPublicKey || '', o.read ? 'yes' : 'no'
+            o.coinid, o.buyerPublicKey || '', o.read ? 'yes' : 'no',
+            o.items || ''
         ].map(csvEscape).join(',');
     });
 
@@ -605,20 +625,31 @@ function processOrderCoin(coin) {
                     return;
                 }
                 
+                // Detect v2 (multi-product) vs v1 (single product)
+                var isV2 = Array.isArray(decrypted.items);
+                var productSummary = decrypted.product || 'Pocket Shop';
+                var amountSummary = decrypted.amount || '1';
+                var itemsJson = '';
+
+                if (isV2) {
+                    productSummary = decrypted.items.map(function(i) { return i.name; }).join(', ');
+                    amountSummary = decrypted.items.reduce(function(s, i) { return s + (i.qty || 1); }, 0).toString();
+                    itemsJson = JSON.stringify(decrypted.items);
+                }
+
                 const order = {
                     ref: decrypted.ref || 'ORDER-' + Date.now(),
                     type: decrypted.type,
-                    product: decrypted.product || 'Pocket Shop',
-                    amount: decrypted.amount || '1',
+                    product: productSummary,
+                    amount: amountSummary,
                     currency: decrypted.currency || 'Minima',
                     shipping: decrypted.shipping || '',
                     message: decrypted.message || '',
                     timestamp: decrypted.timestamp || Date.now(),
                     coinid: coinid,
                     read: false,
-                    // buyerMxKey is inside the encrypted payload — the only source now
-                    // that we no longer send the ChainMail envelope with visible mxpublickey
-                    buyerPublicKey: decrypted.buyerMxKey || decrypted._senderPublicKey || ''
+                    buyerPublicKey: decrypted.buyerMxKey || decrypted._senderPublicKey || '',
+                    items: itemsJson
                 };
                 console.log('Buyer MX key for ChainMail:', order.buyerPublicKey);
                 

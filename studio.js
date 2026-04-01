@@ -178,29 +178,62 @@ function handlePreview(res, filename) {
 
 async function handleBuild(req, res) {
     try {
-        const body    = JSON.parse((await readBody(req)).toString());
-        const { name, description, price, maxUnits, imagePath, currency } = body;
+        const body = JSON.parse((await readBody(req)).toString());
+        const currency = body.currency || 'MINI';
 
-        if (!name) return jsonResponse(res, 400, { error: 'Product name is required' });
-        if (!price || parseFloat(price) <= 0) return jsonResponse(res, 400, { error: 'Price must be greater than 0' });
-        if (!maxUnits || parseInt(maxUnits) < 1) return jsonResponse(res, 400, { error: 'Max units must be at least 1' });
-        if (currency && currency !== 'MINI' && currency !== 'USDT') return jsonResponse(res, 400, { error: 'Currency must be MINI or USDT' });
+        if (currency !== 'MINI' && currency !== 'USDT') return jsonResponse(res, 400, { error: 'Currency must be MINI or USDT' });
 
         const cfg = loadConfig();
         if (!cfg) return jsonResponse(res, 400, { error: 'Vendor not configured — go to Vendor Setup tab first' });
 
         ensureDir(DIST_DIR);
 
-        const result  = await studioBuilder.build({
-            name,
-            description: description || '',
-            price:       parseFloat(price),
-            maxUnits:    parseInt(maxUnits),
-            imagePath:   imagePath && fs.existsSync(imagePath) ? imagePath : null,
-            address:     cfg.address,
-            pubkey:      cfg.pubkey,
-            currency:    currency || 'MINI',
-        }, DIST_DIR);
+        let buildOpts;
+
+        if (Array.isArray(body.products)) {
+            // v2 multi-product build
+            const shopName = (body.shopName || '').trim();
+            if (!shopName) return jsonResponse(res, 400, { error: 'Shop name is required' });
+            if (body.products.length < 1 || body.products.length > 4) return jsonResponse(res, 400, { error: 'Must have 1-4 products' });
+
+            for (let i = 0; i < body.products.length; i++) {
+                const p = body.products[i];
+                if (!p.name || !p.name.trim()) return jsonResponse(res, 400, { error: `Product ${i + 1}: name is required` });
+                if (!p.price || parseFloat(p.price) <= 0) return jsonResponse(res, 400, { error: `Product ${i + 1}: price must be > 0` });
+            }
+
+            buildOpts = {
+                shopName,
+                products: body.products.map(p => ({
+                    name:        p.name.trim(),
+                    description: (p.description || '').trim(),
+                    price:       parseFloat(p.price),
+                    maxUnits:    parseInt(p.maxUnits) || 10,
+                    imagePath:   p.imagePath && fs.existsSync(p.imagePath) ? p.imagePath : null,
+                })),
+                address:  cfg.address,
+                pubkey:   cfg.pubkey,
+                currency,
+            };
+        } else {
+            // v1 legacy single-product build
+            const { name, description, price, maxUnits, imagePath } = body;
+            if (!name) return jsonResponse(res, 400, { error: 'Product name is required' });
+            if (!price || parseFloat(price) <= 0) return jsonResponse(res, 400, { error: 'Price must be greater than 0' });
+
+            buildOpts = {
+                name,
+                description: description || '',
+                price:       parseFloat(price),
+                maxUnits:    parseInt(maxUnits) || 10,
+                imagePath:   imagePath && fs.existsSync(imagePath) ? imagePath : null,
+                address:     cfg.address,
+                pubkey:      cfg.pubkey,
+                currency,
+            };
+        }
+
+        const result = await studioBuilder.build(buildOpts, DIST_DIR);
 
         jsonResponse(res, 200, {
             ok:        true,

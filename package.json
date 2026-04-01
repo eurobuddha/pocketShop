@@ -1,6 +1,6 @@
 {
   "name": "pocketshop",
-  "version": "1.0.1",
+  "version": "2.0.0",
   "description": "Lightweight MiniDapp shop template for selling products on the Minima blockchain. Includes a shop, vendor inbox, and Studio web UI builder.",
   "main": "studio.js",
   "bin": {
