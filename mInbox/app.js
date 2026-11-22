@@ -92,7 +92,8 @@ function initDatabase(callback) {
             "ref TEXT, type TEXT, product TEXT, amount TEXT, currency TEXT," +
             "shipping TEXT, message TEXT, timestamp BIGINT," +
             "coinid TEXT UNIQUE, isread INTEGER DEFAULT 0, buyerPublicKey TEXT," +
-            "status TEXT DEFAULT 'PAID', items TEXT)",
+            "status TEXT DEFAULT 'PAID', items TEXT," +
+            "received TEXT, tokenid TEXT, ordertotal TEXT)",
             function(response) {
                 if (response && response.status) {
                     dbReady = true;
@@ -129,7 +130,7 @@ function saveOrderToDb(order, callback) {
             
             // Insert new order
             MDS.sql(
-                "INSERT INTO orders (ref, type, product, amount, currency, shipping, message, timestamp, coinid, isread, buyerPublicKey, status, items) " +
+                "INSERT INTO orders (ref, type, product, amount, currency, shipping, message, timestamp, coinid, isread, buyerPublicKey, status, items, received, tokenid, ordertotal) " +
                 "VALUES (" +
                 escapeSQL(order.ref || '') + ", " +
                 escapeSQL(order.type || 'ORDER') + ", " +
@@ -142,7 +143,10 @@ function saveOrderToDb(order, callback) {
                 escapeSQL(order.coinid || '') + ", 0, " +
                 escapeSQL(order.buyerPublicKey || '') + ", " +
                 escapeSQL(order.status || 'PAID') + ", " +
-                escapeSQL(order.items || '') + ")",
+                escapeSQL(order.items || '') + ", " +
+                escapeSQL(order.received) + ", " +
+                escapeSQL(order.tokenid) + ", " +
+                escapeSQL(order.ordertotal) + ")",
                 function(response) {
                     console.log('INSERT response:', JSON.stringify(response));
                     if (response && response.status) {
@@ -237,7 +241,7 @@ function renderOrders() {
                     <span class="status-badge status-${statusClass}">${isInquiry ? 'INQUIRY' : escapeHtml(order.status || 'PAID')}</span>
                 </div>
                 <div class="order-meta">
-                    <span class="order-amount">${isInquiry ? 'Message' : escapeHtml(order.amount) + ' ' + escapeHtml(order.currency)}</span>
+                    <span class="order-amount" style="word-break: break-all">${isInquiry ? 'Message' : escapeHtml(order.payText)}</span>
                     <span class="order-delivery">${metaRight}</span>
                 </div>
                 <div class="order-time">${formatDate(order.timestamp)}</div>
@@ -285,7 +289,11 @@ function openOrderModal(order) {
     }
 
     let infoHtml = itemsHtml +
-        `<div class="info-row"><span class="label">${order.items ? 'Total:' : 'Amount:'}</span><span class="value">${escapeHtml(order.amount)} ${escapeHtml(order.currency)}</span></div>
+        (order.type === 'INQUIRY'
+            ? `<div class="info-row"><span class="label">Amount:</span><span class="value">${escapeHtml(order.amount)} ${escapeHtml(order.currency)}</span></div>`
+            : `<div class="info-row"><span class="label">Items:</span><span class="value">${escapeHtml(order.amount)}</span></div>
+        <div class="info-row"><span class="label">Payment:</span><span class="value" style="word-break: break-all">${escapeHtml(order.payText)}</span></div>`) +
+        `
         <div class="info-row"><span class="label">Delivery:</span><span class="value">${order.shipping === 'DIGITAL' ? 'Digital — via ChainMail' : 'Physical'}</span></div>
         ${order.shipping && order.shipping !== 'DIGITAL' ? `<div class="info-row"><span class="label">Shipping:</span><span class="value shipping-address">${escapeHtml(order.shipping)}</span></div>` : ''}
         ${order.message ? `<div class="info-row"><span class="label">Message:</span><span class="value">${escapeHtml(order.message)}</span></div>` : ''}
@@ -498,7 +506,8 @@ function loadOrders() {
                 coinid: row.COINID,
                 read: row.ISREAD === 1,
                 buyerPublicKey: row.BUYERPUBLICKEY,
-                status: row.STATUS || 'PAID'
+                status: row.STATUS || 'PAID',
+                payText: checkPayment(row.RECEIVED == null ? null : row.RECEIVED, row.TOKENID, row.ORDERTOTAL, tokenIdForCurrency(row.CURRENCY)).text
             }));
             renderOrders();
         }
@@ -637,19 +646,31 @@ function processOrderCoin(coin) {
                     itemsJson = JSON.stringify(decrypted.items);
                 }
 
+                // What the coin actually carried: tokenamount for a token coin, amount for Minima.
+                // The total and currency are the buyer's own figures (the inbox has no price list).
+                var received = coin.tokenid === '0x00' ? coin.amount : coin.tokenamount;
+                received = received == null ? '' : String(received);
+                var orderTotal = decrypted.totalPrice == null ? '' : String(decrypted.totalPrice);
+                var currency = decrypted.currency || 'Minima';
+                var check = checkPayment(received, coin.tokenid || '', orderTotal, tokenIdForCurrency(currency));
+
                 const order = {
                     ref: decrypted.ref || 'ORDER-' + Date.now(),
                     type: decrypted.type,
                     product: productSummary,
                     amount: amountSummary,
-                    currency: decrypted.currency || 'Minima',
+                    currency: currency,
                     shipping: decrypted.shipping || '',
                     message: decrypted.message || '',
                     timestamp: decrypted.timestamp || Date.now(),
                     coinid: coinid,
                     read: false,
                     buyerPublicKey: decrypted.buyerMxKey || decrypted._senderPublicKey || '',
-                    items: itemsJson
+                    items: itemsJson,
+                    status: check.status,
+                    received: received,
+                    tokenid: coin.tokenid || '',
+                    ordertotal: orderTotal
                 };
                 console.log('Buyer MX key for ChainMail:', order.buyerPublicKey);
                 
